@@ -45,6 +45,27 @@ const CONFIRMED_PAYMENT_STATUSES = [
   "success",
 ] as const;
 
+const STOCK_EVENT_TYPES = [
+  "stock_discounted",
+  "stock_discount_warning",
+  "stock_discount_failed",
+] as const;
+
+const PROBLEM_STOCK_ALERT_TONES = ["danger", "warning"] as const;
+
+type SupabaseAdminClient = NonNullable<
+  ReturnType<typeof createSupabaseAdminClient>
+>;
+
+type StockAlertTone = "success" | "warning" | "danger" | "muted";
+
+interface OrderEventRow {
+  order_id?: unknown;
+  event_type?: unknown;
+  payload?: unknown;
+  created_at?: unknown;
+}
+
 type AdminOrderDeleteBlockReason =
   | "eligible"
   | "invalidConfirmation"
@@ -57,6 +78,15 @@ export interface AdminOrderDeletionEligibility {
   canDelete: boolean;
   reason: AdminOrderDeleteBlockReason;
   message: string;
+}
+
+export interface AdminOrderStockAlert {
+  eventType: string;
+  tone: StockAlertTone;
+  label: string;
+  message: string;
+  details: string[];
+  createdAt: string | null;
 }
 
 export interface AdminOrderFilters {
@@ -85,6 +115,7 @@ export interface AdminOrderListItem {
   archivedAt: string | null;
   archivedBy: string | null;
   internalNote: string | null;
+  stockAlert: AdminOrderStockAlert | null;
 }
 
 export interface AdminOrderDetail extends AdminOrderListItem {
@@ -116,6 +147,7 @@ export interface AdminOrderDetail extends AdminOrderListItem {
     references: string | null;
     deliveryNotes: string | null;
   } | null;
+  stockAlerts: AdminOrderStockAlert[];
 }
 
 export interface AdminOrdersPageData {
@@ -174,6 +206,170 @@ function normalizeText(value: string) {
 
 function toStringOrNull(value: unknown) {
   return typeof value === "string" && value.trim() ? value : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function toStringList(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((entry) => {
+      if (typeof entry === "string") {
+        return entry;
+      }
+
+      if (entry === null || entry === undefined) {
+        return "";
+      }
+
+      return JSON.stringify(entry);
+    })
+    .filter(Boolean);
+}
+
+function isUncontrolledStockWarning(value: string) {
+  return value.toLowerCase().includes("sin stock_quantity controlado");
+}
+
+function formatStockChange(value: unknown) {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const name = String(value.name ?? value.sku ?? value.productId ?? "Producto");
+  const previousStock = value.previousStock;
+  const nextStock = value.nextStock;
+  const quantity = value.quantity;
+
+  return `${name}: ${previousStock ?? "-"} -> ${nextStock ?? "-"}${
+    quantity ? ` (-${quantity})` : ""
+  }`;
+}
+
+function mapStockEvent(event: OrderEventRow): AdminOrderStockAlert | null {
+  const eventType = String(event.event_type ?? "");
+
+  if (!STOCK_EVENT_TYPES.includes(eventType as (typeof STOCK_EVENT_TYPES)[number])) {
+    return null;
+  }
+
+  const payload = isRecord(event.payload) ? event.payload : {};
+  const warnings = toStringList(payload.warnings);
+  const changes = Array.isArray(payload.changes)
+    ? payload.changes.map(formatStockChange).filter((value): value is string => Boolean(value))
+    : [];
+  const createdAt = toStringOrNull(event.created_at);
+
+  if (eventType === "stock_discount_failed") {
+    return {
+      eventType,
+      tone: "danger",
+      label: "Error stock",
+      message: "No fue posible descontar stock automaticamente.",
+      details: [toStringOrNull(payload.message) ?? "Revisar logs del backend."],
+      createdAt,
+    };
+  }
+
+  if (warnings.length > 0 || eventType === "stock_discount_warning") {
+    const onlyUncontrolledStock =
+      warnings.length > 0 && warnings.every(isUncontrolledStockWarning);
+
+    return {
+      eventType,
+      tone: onlyUncontrolledStock ? "muted" : "warning",
+      label: onlyUncontrolledStock ? "Sin control stock" : "Alerta stock",
+      message: onlyUncontrolledStock
+        ? "El pedido incluye productos sin control de stock; no se descontaron esos items."
+        : "El descuento de stock termino con advertencias.",
+      details: warnings,
+      createdAt,
+    };
+  }
+
+  if (changes.length > 0) {
+    return {
+      eventType,
+      tone: "success",
+      label: "Stock descontado",
+      message: "Stock descontado automaticamente al confirmarse el pago.",
+      details: changes,
+      createdAt,
+    };
+  }
+
+  return {
+    eventType,
+    tone: "muted",
+    label: "Stock sin cambio",
+    message: "No hubo productos con stock controlado para descontar.",
+    details: [],
+    createdAt,
+  };
+}
+
+function mapStockEvents(events: OrderEventRow[]) {
+  return events
+    .map(mapStockEvent)
+    .filter((alert): alert is AdminOrderStockAlert => Boolean(alert));
+}
+
+function getPrimaryStockAlert(alerts: AdminOrderStockAlert[]) {
+  return (
+    alerts.find((alert) =>
+      PROBLEM_STOCK_ALERT_TONES.includes(
+        alert.tone as (typeof PROBLEM_STOCK_ALERT_TONES)[number]
+      )
+    ) ?? null
+  );
+}
+
+async function loadStockEventsByOrder(
+  client: SupabaseAdminClient,
+  orderIds: string[]
+): Promise<{
+  eventsByOrder: Map<string, OrderEventRow[]>;
+  warning?: string;
+}> {
+  const eventsByOrder = new Map<string, OrderEventRow[]>();
+
+  if (!orderIds.length) {
+    return { eventsByOrder };
+  }
+
+  const { data, error } = await client
+    .from("order_events")
+    .select("order_id,event_type,payload,created_at")
+    .in("order_id", orderIds)
+    .in("event_type", [...STOCK_EVENT_TYPES])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return {
+      eventsByOrder,
+      warning:
+        "No fue posible cargar alertas de stock; revisa order_events si sospechas un problema.",
+    };
+  }
+
+  ((data ?? []) as OrderEventRow[]).forEach((event) => {
+    const orderId = toStringOrNull(event.order_id);
+
+    if (!orderId) {
+      return;
+    }
+
+    const events = eventsByOrder.get(orderId) ?? [];
+    events.push(event);
+    eventsByOrder.set(orderId, events);
+  });
+
+  return { eventsByOrder };
 }
 
 function toOrderStatus(value: unknown): OrderStatus {
@@ -250,7 +446,12 @@ function toIsoEnd(date: string) {
   return `${date}T23:59:59.999Z`;
 }
 
-function mapOrder(row: Record<string, unknown>): AdminOrderListItem {
+function mapOrder(
+  row: Record<string, unknown>,
+  stockEvents: OrderEventRow[] = []
+): AdminOrderListItem {
+  const stockAlerts = mapStockEvents(stockEvents);
+
   return {
     id: String(row.id),
     orderNumber: String(row.order_number ?? ""),
@@ -268,6 +469,7 @@ function mapOrder(row: Record<string, unknown>): AdminOrderListItem {
     archivedAt: toStringOrNull(row.archived_at),
     archivedBy: toStringOrNull(row.archived_by),
     internalNote: toStringOrNull(row.internal_note),
+    stockAlert: getPrimaryStockAlert(stockAlerts),
   };
 }
 
@@ -276,16 +478,19 @@ function mapOrderDetail({
   address,
   items,
   paymentAttempts,
+  orderEvents,
 }: {
   order: Record<string, unknown>;
   address: Record<string, unknown> | null;
   items: Array<Record<string, unknown>>;
   paymentAttempts: Array<Record<string, unknown>>;
+  orderEvents: OrderEventRow[];
 }): AdminOrderDetail {
   const paymentAttempt = paymentAttempts[0] ?? null;
+  const stockAlerts = mapStockEvents(orderEvents);
 
   return {
-    ...mapOrder(order),
+    ...mapOrder(order, orderEvents),
     businessName: toStringOrNull(order.business_name),
     businessActivity: toStringOrNull(order.business_activity),
     subtotalTaxInc: Number(order.subtotal_tax_inc ?? 0),
@@ -324,6 +529,7 @@ function mapOrderDetail({
           deliveryNotes: toStringOrNull(address.delivery_notes),
         }
       : null,
+    stockAlerts,
   };
 }
 
@@ -473,8 +679,14 @@ export async function getAdminOrdersPageData(
     };
   }
 
-  const orders = (data ?? []).map((order) =>
-    mapOrder(order as Record<string, unknown>)
+  const orderRows = (data ?? []) as Array<Record<string, unknown>>;
+  const { eventsByOrder, warning: stockEventsWarning } =
+    await loadStockEventsByOrder(
+      client,
+      orderRows.map((order) => String(order.id ?? "")).filter(Boolean)
+    );
+  const orders = orderRows.map((order) =>
+    mapOrder(order, eventsByOrder.get(String(order.id ?? "")) ?? [])
   );
   const filteredOrders = applySearch(orders, filters.query);
 
@@ -484,6 +696,7 @@ export async function getAdminOrdersPageData(
     visibleOrders: orders.filter((order) => !order.archivedAt).length,
     archivedOrders: orders.filter((order) => order.archivedAt).length,
     canMutate,
+    warning: stockEventsWarning,
   };
 }
 
@@ -503,6 +716,7 @@ export async function getAdminOrderDetail(orderId: string) {
     { data: addressData },
     { data: itemsData },
     { data: paymentAttemptsData },
+    { data: orderEventsData },
   ] = await Promise.all([
     client.from("orders").select("*").eq("id", orderId).maybeSingle(),
     client
@@ -521,6 +735,12 @@ export async function getAdminOrderDetail(orderId: string) {
       .eq("order_id", orderId)
       .order("created_at", { ascending: false })
       .limit(20),
+    client
+      .from("order_events")
+      .select("order_id,event_type,payload,created_at")
+      .eq("order_id", orderId)
+      .in("event_type", [...STOCK_EVENT_TYPES])
+      .order("created_at", { ascending: false }),
   ]);
 
   if (orderError || !orderData) {
@@ -534,6 +754,7 @@ export async function getAdminOrderDetail(orderId: string) {
     paymentAttempts: (paymentAttemptsData ?? []) as Array<
       Record<string, unknown>
     >,
+    orderEvents: (orderEventsData ?? []) as OrderEventRow[],
   });
 }
 

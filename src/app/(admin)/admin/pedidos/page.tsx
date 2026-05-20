@@ -20,6 +20,7 @@ import type {
   AdminOrderDetail,
   AdminOrderListItem,
   AdminOrderStatus,
+  AdminOrderStockAlert,
 } from "@/modules/orders/admin";
 import type { PaymentStatus } from "@/modules/orders/service";
 import {
@@ -144,6 +145,37 @@ function formatDateTime(value: string | null) {
   });
 }
 
+function getPaymentBadgeStatus(status: PaymentStatus) {
+  return status === "cancelled" ? "payment_cancelled" : status;
+}
+
+function getStockAlertBadgeStatus(alert: AdminOrderStockAlert) {
+  if (alert.tone === "danger") {
+    return "stock_failed";
+  }
+
+  if (alert.tone === "warning") {
+    return "stock_warning";
+  }
+
+  if (alert.tone === "success") {
+    return "stock_discounted";
+  }
+
+  return "stock_skipped";
+}
+
+const stockAlertToneClassNames: Record<AdminOrderStockAlert["tone"], string> = {
+  success:
+    "border-[color-mix(in_srgb,var(--color-success)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-success)_10%,var(--color-card)_90%)]",
+  warning:
+    "border-[color-mix(in_srgb,var(--color-warning)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-warning)_14%,var(--color-card)_86%)]",
+  danger:
+    "border-[color-mix(in_srgb,var(--color-danger)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-danger)_12%,var(--color-card)_88%)]",
+  muted:
+    "border-[var(--color-border)] bg-[var(--color-surface-strong)]",
+};
+
 function cleanPhone(value: string | null) {
   if (!value) {
     return null;
@@ -262,7 +294,10 @@ function OrderCard({
             {order.orderNumber}
           </h3>
           <StatusBadge status={order.orderStatus} />
-          <StatusBadge status={order.paymentStatus} />
+          <StatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
+          {order.stockAlert ? (
+            <StatusBadge status={getStockAlertBadgeStatus(order.stockAlert)} />
+          ) : null}
           {order.archivedAt ? <StatusBadge status="archived" /> : null}
         </div>
         <p className="mt-1 text-sm font-semibold text-[var(--color-ink)]">
@@ -343,6 +378,48 @@ function DetailLine({
   );
 }
 
+function StockAlertsPanel({ alerts }: { alerts: AdminOrderStockAlert[] }) {
+  if (!alerts.length) {
+    return null;
+  }
+
+  return (
+    <section className="mt-3 rounded-[1rem] border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-base font-semibold">Stock automatico</h3>
+        <p className="text-xs text-[var(--color-muted-foreground)]">
+          Eventos desde order_events
+        </p>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {alerts.map((alert, index) => (
+          <article
+            key={`${alert.eventType}-${alert.createdAt ?? index}`}
+            className={`rounded-[0.85rem] border px-3 py-2.5 ${stockAlertToneClassNames[alert.tone]}`}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={getStockAlertBadgeStatus(alert)} />
+              <span className="text-xs text-[var(--color-muted-foreground)]">
+                {formatDateTime(alert.createdAt)}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-card-foreground)]">
+              {alert.message}
+            </p>
+            {alert.details.length ? (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-[var(--color-muted-foreground)]">
+                {alert.details.map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+            ) : null}
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function OrderDetailPanel({
   order,
   canMutate,
@@ -371,7 +448,10 @@ function OrderDetailPanel({
           <h2 className="mt-1 text-xl font-semibold">{order.orderNumber}</h2>
           <div className="mt-2 flex flex-wrap gap-2">
             <StatusBadge status={order.orderStatus} />
-            <StatusBadge status={order.paymentStatus} />
+            <StatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
+            {order.stockAlert ? (
+              <StatusBadge status={getStockAlertBadgeStatus(order.stockAlert)} />
+            ) : null}
             {order.archivedAt ? <StatusBadge status="archived" /> : null}
           </div>
         </div>
@@ -397,6 +477,8 @@ function OrderDetailPanel({
             Pedido registrado con flujo anterior. Se conserva para trazabilidad.
           </p>
         ) : null}
+
+        <StockAlertsPanel alerts={order.stockAlerts} />
 
         <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="grid gap-3">

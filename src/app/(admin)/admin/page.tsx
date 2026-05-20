@@ -3,10 +3,15 @@ import { StatusBadge } from "@/components/feedback/StatusBadge";
 import { formatClp } from "@/lib/format/currency";
 import { getCatalogCategories } from "@/modules/catalog/repository";
 import { listOrdersForAdmin } from "@/modules/orders/service";
+import type { PaymentStatus } from "@/modules/orders/service";
 import {
   QuoteRequestAdminRow,
   listQuoteRequestsForAdmin,
 } from "@/modules/quotes/service";
+
+function getPaymentBadgeStatus(status: PaymentStatus) {
+  return status === "cancelled" ? "payment_cancelled" : status;
+}
 
 export default async function AdminDashboardPage() {
   const [categories, orders, quotes] = await Promise.all([
@@ -72,7 +77,7 @@ export default async function AdminDashboardPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <StatusBadge status={order.paymentStatus} />
+                  <StatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
                   <StatusBadge status={order.orderStatus} />
                 </div>
               </div>

@@ -30,6 +30,18 @@ const statusMap = {
     label: "Cancelado",
     className: statusToneClassNames.muted,
   },
+  payment_cancelled: {
+    label: "Pago anulado",
+    className: statusToneClassNames.muted,
+  },
+  failed: {
+    label: "Fallido",
+    className: statusToneClassNames.danger,
+  },
+  expired: {
+    label: "Expirado",
+    className: statusToneClassNames.muted,
+  },
   preparing: {
     label: "En preparacion",
     className: statusToneClassNames.warning,
@@ -117,6 +129,22 @@ const statusMap = {
   missing_category: {
     label: "Falta categoria",
     className: statusToneClassNames.danger,
+  },
+  stock_discounted: {
+    label: "Stock descontado",
+    className: statusToneClassNames.success,
+  },
+  stock_warning: {
+    label: "Alerta stock",
+    className: statusToneClassNames.warning,
+  },
+  stock_failed: {
+    label: "Error stock",
+    className: statusToneClassNames.danger,
+  },
+  stock_skipped: {
+    label: "Stock sin cambio",
+    className: statusToneClassNames.muted,
   },
 } as const;
 
