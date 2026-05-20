@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -11,6 +11,31 @@ export function SiteHeader() {
   const pathname = usePathname();
   const totalItems = useCartStore((store) => store.totalItems());
   const [menuOpen, setMenuOpen] = useState(false);
+  const skipNextMenuClickRef = useRef(false);
+
+  function toggleMenu() {
+    setMenuOpen((current) => !current);
+  }
+
+  function handleMenuPointerUp(event: PointerEvent<HTMLButtonElement>) {
+    if (event.pointerType === "touch" || event.pointerType === "pen") {
+      event.preventDefault();
+      event.stopPropagation();
+      skipNextMenuClickRef.current = true;
+      toggleMenu();
+    }
+  }
+
+  function handleMenuClick(event: MouseEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+
+    if (skipNextMenuClickRef.current) {
+      skipNextMenuClickRef.current = false;
+      return;
+    }
+
+    toggleMenu();
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-header)_95%,transparent)] text-[var(--color-header-foreground)] backdrop-blur">
@@ -80,9 +105,12 @@ export function SiteHeader() {
           {/* Mobile menu button */}
           <button
             type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-header-foreground)] lg:hidden"
+            onClick={handleMenuClick}
+            onPointerUp={handleMenuPointerUp}
+            className="relative z-[55] inline-flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-full text-[var(--color-header-foreground)] [pointer-events:auto] lg:hidden"
             aria-label="Menú"
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               {menuOpen ? (
@@ -97,7 +125,7 @@ export function SiteHeader() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <nav className="border-t border-[var(--color-border)] bg-[var(--color-header)] px-4 pb-4 pt-2 text-[var(--color-header-foreground)] lg:hidden">
+        <nav id="mobile-menu" className="border-t border-[var(--color-border)] bg-[var(--color-header)] px-4 pb-4 pt-2 text-[var(--color-header-foreground)] lg:hidden">
           {publicNavigation.map((item) => {
             const isActive = pathname === item.href;
             return (
