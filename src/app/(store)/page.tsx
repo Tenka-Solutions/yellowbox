@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
-import { CategoriesGrid } from "@/components/home/CategoriesGrid";
 import { TrustSignals } from "@/components/home/TrustSignals";
 
 import { getCatalogCategories, getFeaturedCatalogProducts } from "@/modules/catalog/repository";
@@ -77,9 +76,6 @@ export default async function HomePage() {
           <HeroCarousel products={featuredProducts} />
         </div>
       </section>
-
-      {/* Categories */}
-      <CategoriesGrid categories={categories} />
 
       {/* Trust Signals */}
       <TrustSignals />

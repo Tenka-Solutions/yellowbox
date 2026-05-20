@@ -91,8 +91,18 @@ html[data-theme="light"] {
   --color-mauve: var(--brand-taupe-grey);
   --color-copper: var(--brand-dusty-taupe);
   --color-gold: var(--color-primary);
+  --radius-small: 0.75rem;
+  --radius-medium: 1.25rem;
+  --radius-large: 1.8rem;
+  --border-width-base: 1px;
+  --font-size-base: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-section-title: 1.5rem;
+  --font-size-page-title: 2.25rem;
+  --font-size-navigation: 0.875rem;
   --shadow-soft: 0 24px 60px -42px rgba(35, 45, 47, 0.18);
   --shadow-card: 0 18px 45px -38px rgba(35, 45, 47, 0.16);
+  --shadow-button: 0 18px 34px -24px rgba(204, 131, 40, 0.38);
 }
 
 html[data-theme="dark"] {
@@ -179,8 +189,18 @@ html[data-theme="dark"] {
   --color-mauve: var(--color-accent);
   --color-copper: var(--color-secondary-hover);
   --color-gold: var(--color-primary);
+  --radius-small: 0.75rem;
+  --radius-medium: 1.25rem;
+  --radius-large: 1.8rem;
+  --border-width-base: 1px;
+  --font-size-base: 1rem;
+  --font-size-small: 0.875rem;
+  --font-size-section-title: 1.5rem;
+  --font-size-page-title: 2.25rem;
+  --font-size-navigation: 0.875rem;
   --shadow-soft: 0 30px 70px -42px rgba(0, 0, 0, 0.75);
   --shadow-card: 0 20px 50px -36px rgba(0, 0, 0, 0.7);
+  --shadow-button: 0 18px 34px -24px rgba(204, 131, 40, 0.42);
 }
 
 @theme inline {
@@ -220,6 +240,7 @@ html.theme-ready *::after {
 
 body {
   background: var(--color-background);
+  font-size: var(--font-size-base);
 }
 
 body,
@@ -306,14 +327,16 @@ img {
 }
 
 .surface-card {
-  border: 1px solid var(--color-admin-border, var(--color-border));
+  border: var(--border-width-base) solid var(--color-admin-border, var(--color-border));
+  border-radius: var(--radius-large);
   background: var(--color-card);
   color: var(--color-card-foreground);
   box-shadow: var(--shadow-card);
 }
 
 .panel-card {
-  border: 1px solid var(--color-admin-border, var(--color-border));
+  border: var(--border-width-base) solid var(--color-admin-border, var(--color-border));
+  border-radius: var(--radius-large);
   background: var(--color-card);
   color: var(--color-card-foreground);
   box-shadow: var(--shadow-soft);
@@ -324,9 +347,11 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-large);
   background: var(--color-primary);
   color: var(--color-primary-foreground);
+  box-shadow: var(--shadow-button);
+  font-size: var(--font-size-navigation);
   font-weight: 600;
 }
 
@@ -339,14 +364,16 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--color-admin-border, var(--color-border));
+  border-radius: var(--radius-large);
+  border: var(--border-width-base) solid var(--color-admin-border, var(--color-border));
   background: color-mix(
     in srgb,
     var(--color-card) 72%,
     var(--color-surface-strong) 28%
   );
   color: var(--color-admin-foreground, var(--color-card-foreground));
+  box-shadow: var(--shadow-button);
+  font-size: var(--font-size-navigation);
   font-weight: 600;
 }
 
@@ -361,9 +388,11 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: 999px;
+  border-radius: var(--radius-large);
   background: var(--color-primary);
   color: var(--color-primary-foreground);
+  box-shadow: var(--shadow-button);
+  font-size: var(--font-size-navigation);
   font-weight: 600;
 }
 
@@ -373,7 +402,7 @@ img {
 
 .section-kicker {
   color: var(--color-admin-link, var(--color-link));
-  font-size: 0.74rem;
+  font-size: var(--font-size-small);
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -381,19 +410,19 @@ img {
 
 .form-input {
   width: 100%;
-  border-radius: 1.125rem;
-  border: 1px solid var(--color-admin-border, var(--color-border));
+  border-radius: var(--radius-medium);
+  border: var(--border-width-base) solid var(--color-admin-border, var(--color-border));
   background: var(--color-input);
   padding: 0.9rem 1rem;
-  font-size: 0.95rem;
+  font-size: var(--font-size-base);
   color: var(--color-input-foreground);
   outline: none;
 }
 
 .form-input-compact {
-  border-radius: 0.85rem;
+  border-radius: var(--radius-small);
   padding: 0.55rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: var(--font-size-small);
 }
 
 .form-input:focus {

@@ -30,7 +30,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-sm font-medium transition-colors ${
+                className={`text-[length:var(--font-size-navigation)] font-medium transition-colors ${
                   isActive
                     ? "text-[var(--color-primary)]"
                     : "text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)]"
@@ -47,7 +47,7 @@ export function SiteHeader() {
           <ThemeToggle className="border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-header)_88%,transparent)] text-[var(--color-header-muted)]" />
           <Link
             href="/login"
-            className="hidden text-sm font-medium text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)] sm:inline-flex"
+            className="hidden text-[length:var(--font-size-navigation)] font-medium text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)] sm:inline-flex"
           >
             Mi cuenta
           </Link>
@@ -105,7 +105,7 @@ export function SiteHeader() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                className={`block rounded-lg px-3 py-2.5 text-sm font-medium ${
+                className={`block rounded-lg px-3 py-2.5 text-[length:var(--font-size-navigation)] font-medium ${
                   isActive
                     ? "text-[var(--color-primary)]"
                     : "text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)]"
@@ -118,7 +118,7 @@ export function SiteHeader() {
           <Link
             href="/login"
             onClick={() => setMenuOpen(false)}
-            className="mt-2 block rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)]"
+            className="mt-2 block rounded-lg px-3 py-2.5 text-[length:var(--font-size-navigation)] font-medium text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)]"
           >
             Mi cuenta
           </Link>

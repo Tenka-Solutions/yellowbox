@@ -7,8 +7,8 @@ import { AddToCartButton } from "@/components/catalog/AddToCartButton";
 
 export function ProductCard({ product }: { product: CatalogProduct }) {
   return (
-    <article className="flex h-full flex-col rounded-[1.8rem] border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-[var(--color-card-foreground)] shadow-[var(--shadow-card)]">
-      <div className="relative overflow-hidden rounded-[1.5rem] border border-[var(--color-border)] bg-[var(--color-surface-strong)]">
+    <article className="flex h-full flex-col rounded-[var(--radius-large)] border border-[var(--color-border)] bg-[var(--color-card)] p-4 text-[var(--color-card-foreground)] shadow-[var(--shadow-card)]">
+      <div className="relative overflow-hidden rounded-[var(--radius-medium)] border border-[var(--color-border)] bg-[var(--color-surface-strong)]">
         <div className="absolute left-4 top-4 z-10">
           <AvailabilityBadge status={product.availabilityStatus} />
         </div>
@@ -24,14 +24,14 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
       </div>
 
       <div className="flex flex-1 flex-col px-2 pt-5">
-        <h3 className="text-xl font-semibold leading-tight text-[var(--color-ink)]">
+        <h3 className="text-[length:var(--font-size-section-title)] font-semibold leading-tight text-[var(--color-ink)]">
           {product.name}
         </h3>
-        <p className="mt-3 text-sm leading-7 text-[var(--color-muted-foreground)]">
+        <p className="mt-3 text-[length:var(--font-size-small)] leading-7 text-[var(--color-muted-foreground)]">
           {product.shortDescription}
         </p>
 
-        <div className="mt-4 grid gap-2 text-sm text-[var(--color-muted-foreground)]">
+        <div className="mt-4 grid gap-2 text-[length:var(--font-size-small)] text-[var(--color-muted-foreground)]">
           {product.highlights.slice(0, 3).map((highlight) => (
             <div key={highlight} className="flex gap-2">
               <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[var(--color-primary)]" />

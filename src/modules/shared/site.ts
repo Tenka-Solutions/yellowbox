@@ -48,5 +48,6 @@ export const adminNavigation = [
   { href: "/admin/categorias", label: "Categorías" },
   { href: "/admin/pedidos", label: "Pedidos" },
   { href: "/admin/cotizaciones", label: "Cotizaciones" },
+  { href: "/admin/apariencia", label: "Apariencia" },
   { href: "/admin/usuarios", label: "Usuarios" },
 ];
