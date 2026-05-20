@@ -104,11 +104,11 @@ export function EmailAuthForm() {
 
   return (
     <div>
-      <div className="inline-flex rounded-full border border-[var(--color-border)] p-1 text-sm">
+      <div className="flex w-full rounded-full border border-[var(--color-border)] p-1 text-sm sm:w-auto">
         <button
           type="button"
           onClick={() => setMode("signin")}
-          className={`rounded-full px-4 py-1.5 transition ${
+          className={`min-h-[44px] flex-1 touch-manipulation rounded-full px-4 py-1.5 transition sm:flex-none ${
             mode === "signin"
               ? "bg-[#F2A359] text-white"
               : "text-[var(--color-muted-foreground)]"
@@ -119,7 +119,7 @@ export function EmailAuthForm() {
         <button
           type="button"
           onClick={() => setMode("signup")}
-          className={`rounded-full px-4 py-1.5 transition ${
+          className={`min-h-[44px] flex-1 touch-manipulation rounded-full px-4 py-1.5 transition sm:flex-none ${
             mode === "signup"
               ? "bg-[#F2A359] text-white"
               : "text-[var(--color-muted-foreground)]"
@@ -152,7 +152,10 @@ export function EmailAuthForm() {
           <input
             className="form-input"
             type="email"
+            inputMode="email"
             autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect="off"
             value={form.email}
             placeholder="correo@empresa.cl"
             onChange={(event) => setField("email", event.target.value)}
@@ -177,7 +180,7 @@ export function EmailAuthForm() {
           <button
             type="button"
             onClick={handleForgotPassword}
-            className="justify-self-start text-xs font-semibold text-[var(--color-accent)]"
+            className="inline-flex min-h-[44px] touch-manipulation items-center justify-self-start text-xs font-semibold text-[var(--color-accent)]"
           >
             ¿Olvidaste tu contraseña?
           </button>
@@ -186,7 +189,7 @@ export function EmailAuthForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="button-primary w-full px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
+          className="button-primary min-h-[44px] w-full touch-manipulation px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending
             ? "Procesando..."

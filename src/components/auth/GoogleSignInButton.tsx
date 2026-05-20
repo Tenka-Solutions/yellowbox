@@ -31,7 +31,7 @@ export function GoogleSignInButton() {
     <button
       type="button"
       onClick={handleLogin}
-      className="button-secondary w-full px-6 py-3"
+      className="button-secondary min-h-[44px] w-full touch-manipulation px-6 py-3"
     >
       Continuar con Google
     </button>

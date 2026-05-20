@@ -44,7 +44,7 @@ export function SiteHeader() {
 
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <ThemeToggle className="border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-header)_88%,transparent)] text-[var(--color-header-muted)]" />
+          <ThemeToggle />
           <Link
             href="/login"
             className="hidden text-[length:var(--font-size-navigation)] font-medium text-[var(--color-header-muted)] hover:text-[var(--color-header-foreground)] sm:inline-flex"
