@@ -58,9 +58,6 @@ export function HeroCarousel({ products }: HeroCarouselProps) {
           </article>
         ))}
       </div>
-      <p className="mt-3 text-center text-xs text-[var(--color-hero-muted)]">
-        Carrusel de productos
-      </p>
     </div>
   );
 }
