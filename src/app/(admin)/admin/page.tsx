@@ -21,8 +21,8 @@ export default async function AdminDashboardPage() {
   ]);
 
   return (
-    <div className="grid gap-6">
-      <section className="panel-card rounded-[2rem] p-6 sm:p-8">
+    <div className="flex min-h-screen flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <section className="panel-card shrink-0 rounded-[2rem] p-6 sm:p-8">
         <p className="section-kicker">Admin</p>
         <h1 className="mt-3 text-4xl font-semibold">Panel de gestion</h1>
         <p className="mt-4 max-w-3xl text-sm leading-8 text-[var(--color-muted-foreground)]">
@@ -31,7 +31,7 @@ export default async function AdminDashboardPage() {
         </p>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid shrink-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           ["Categorias publicas", String(categories.length)],
           ["Pedidos recientes", String(orders.length)],
@@ -53,77 +53,81 @@ export default async function AdminDashboardPage() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
-        <article className="panel-card rounded-[2rem] p-6">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-semibold">Ultimos pedidos</h2>
-            <Link
-              href="/admin/pedidos"
-              className="text-sm font-semibold text-[var(--color-accent)]"
-            >
-              Ver todos
-            </Link>
-          </div>
-          <div className="mt-6 space-y-4">
-            {orders.slice(0, 5).map((order) => (
-              <div
-                key={order.id}
-                className="flex flex-col gap-3 rounded-[1.5rem] border border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between"
+      <section className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+        <div className="grid gap-6 xl:grid-cols-2">
+          <article className="panel-card rounded-[2rem] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold">Ultimos pedidos</h2>
+              <Link
+                href="/admin/pedidos"
+                className="text-sm font-semibold text-[var(--color-accent)]"
               >
-                <div>
-                  <p className="font-semibold">{order.orderNumber}</p>
-                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-                    {formatClp(order.totalTaxInc)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={getPaymentBadgeStatus(order.paymentStatus)} />
-                  <StatusBadge status={order.orderStatus} />
-                </div>
-              </div>
-            ))}
-            {!orders.length ? (
-              <p className="text-sm text-[var(--color-muted-foreground)]">
-                Aun no hay pedidos en la base conectada.
-              </p>
-            ) : null}
-          </div>
-        </article>
-
-        <article className="panel-card rounded-[2rem] p-6">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="text-2xl font-semibold">Cotizaciones nuevas</h2>
-            <Link
-              href="/admin/cotizaciones"
-              className="text-sm font-semibold text-[var(--color-accent)]"
-            >
-              Ver todas
-            </Link>
-          </div>
-          <div className="mt-6 space-y-4">
-            {quotes.slice(0, 5).map((quote: QuoteRequestAdminRow) => (
-              <div
-                key={quote.id}
-                className="rounded-[1.5rem] border border-[var(--color-border)] p-4"
-              >
-                <div className="flex items-center justify-between gap-4">
+                Ver todos
+              </Link>
+            </div>
+            <div className="mt-6 space-y-4">
+              {orders.slice(0, 5).map((order) => (
+                <div
+                  key={order.id}
+                  className="flex flex-col gap-3 rounded-[1.5rem] border border-[var(--color-border)] p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
                   <div>
-                    <p className="font-semibold">{quote.name}</p>
+                    <p className="font-semibold">{order.orderNumber}</p>
                     <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-                      {quote.email}
+                      {formatClp(order.totalTaxInc)}
                     </p>
                   </div>
-                  <StatusBadge status={quote.status} />
+                  <div className="flex items-center gap-2">
+                    <StatusBadge
+                      status={getPaymentBadgeStatus(order.paymentStatus)}
+                    />
+                    <StatusBadge status={order.orderStatus} />
+                  </div>
                 </div>
-              </div>
-            ))}
-            {!quotes.length ? (
-              <p className="text-sm text-[var(--color-muted-foreground)]">
-                Aun no hay solicitudes en la base conectada.
-              </p>
-            ) : null}
-          </div>
-        </article>
+              ))}
+              {!orders.length ? (
+                <p className="text-sm text-[var(--color-muted-foreground)]">
+                  Aun no hay pedidos en la base conectada.
+                </p>
+              ) : null}
+            </div>
+          </article>
+
+          <article className="panel-card rounded-[2rem] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold">Cotizaciones nuevas</h2>
+              <Link
+                href="/admin/cotizaciones"
+                className="text-sm font-semibold text-[var(--color-accent)]"
+              >
+                Ver todas
+              </Link>
+            </div>
+            <div className="mt-6 space-y-4">
+              {quotes.slice(0, 5).map((quote: QuoteRequestAdminRow) => (
+                <div
+                  key={quote.id}
+                  className="rounded-[1.5rem] border border-[var(--color-border)] p-4"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">{quote.name}</p>
+                      <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                        {quote.email}
+                      </p>
+                    </div>
+                    <StatusBadge status={quote.status} />
+                  </div>
+                </div>
+              ))}
+              {!quotes.length ? (
+                <p className="text-sm text-[var(--color-muted-foreground)]">
+                  Aun no hay solicitudes en la base conectada.
+                </p>
+              ) : null}
+            </div>
+          </article>
+        </div>
       </section>
     </div>
   );

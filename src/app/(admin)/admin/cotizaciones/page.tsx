@@ -9,8 +9,8 @@ export default async function AdminQuotesPage() {
   const quotes = await listQuoteRequestsForAdmin();
 
   return (
-    <div className="grid gap-6">
-      <section className="panel-card rounded-[2rem] p-6 sm:p-8">
+    <div className="flex min-h-screen flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <section className="panel-card shrink-0 rounded-[2rem] p-6 sm:p-8">
         <p className="section-kicker">Comercial</p>
         <h1 className="mt-3 text-4xl font-semibold">Cotizaciones</h1>
         <p className="mt-4 text-sm leading-8 text-[var(--color-muted-foreground)]">
@@ -20,6 +20,7 @@ export default async function AdminQuotesPage() {
       </section>
 
       <AdminDataTable
+        className="lg:flex-1"
         headers={["Nombre", "Email", "Telefono", "Estado", "Fecha"]}
         rows={quotes.map((quote: QuoteRequestAdminRow) => [
           quote.name,

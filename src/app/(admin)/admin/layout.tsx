@@ -51,9 +51,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[var(--color-page)]">
-      <div className="mx-auto grid h-screen max-w-[112rem] gap-3 p-3 lg:grid-cols-[220px_1fr]">
-        <aside className="panel-card min-h-0 overflow-y-auto rounded-[1.25rem] p-4">
+    <div className="min-h-screen bg-[var(--color-page)] lg:h-screen lg:overflow-hidden">
+      <div className="mx-auto grid min-h-screen max-w-[112rem] gap-3 p-3 lg:h-screen lg:min-h-0 lg:grid-cols-[220px_1fr]">
+        <aside className="panel-card rounded-[1.25rem] p-4 lg:min-h-0 lg:overflow-y-auto">
           <Link href="/" className="block">
             <span className="font-[var(--font-display)] text-xl font-semibold tracking-[-0.04em]">
               SMK <span className="text-[var(--color-accent)]">Vending</span>
@@ -95,7 +95,9 @@ export default async function AdminLayout({
           </div>
         </aside>
 
-        <main className="min-h-0 min-w-0 overflow-hidden">{children}</main>
+        <main className="min-w-0 lg:h-full lg:min-h-0 lg:overflow-hidden">
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -215,8 +215,8 @@ export default async function AdminCategoriesPage({
   );
 
   return (
-    <div className="grid gap-6">
-      <section className="panel-card rounded-[2rem] p-6 sm:p-8">
+    <div className="flex min-h-screen flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <section className="panel-card shrink-0 rounded-[2rem] p-6 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="section-kicker">Catalogo</p>
@@ -273,7 +273,7 @@ export default async function AdminCategoriesPage({
 
       {message ? (
         <div
-          className={`rounded-[1.5rem] border p-4 text-sm font-medium ${
+          className={`shrink-0 rounded-[1.5rem] border p-4 text-sm font-medium ${
             message.tone === "success"
               ? "border-[color-mix(in_srgb,var(--color-success)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-success)_16%,var(--color-card)_84%)] text-[var(--color-card-foreground)]"
               : "border-[color-mix(in_srgb,var(--color-danger)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-danger)_16%,var(--color-card)_84%)] text-[var(--color-card-foreground)]"
@@ -284,68 +284,72 @@ export default async function AdminCategoriesPage({
       ) : null}
 
       {pageData.warning ? (
-        <div className="rounded-[1.5rem] border border-[color-mix(in_srgb,var(--color-warning)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-warning)_18%,var(--color-card)_82%)] p-4 text-sm leading-7 text-[var(--color-card-foreground)]">
+        <div className="shrink-0 rounded-[1.5rem] border border-[color-mix(in_srgb,var(--color-warning)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-warning)_18%,var(--color-card)_82%)] p-4 text-sm leading-7 text-[var(--color-card-foreground)]">
           {pageData.warning}
         </div>
       ) : null}
 
-      {shouldShowForm ? (
-        <CategoryForm
-          key={editingCategory?.id ?? `new-${params.padre ?? "parent"}`}
-          categories={pageData.categories}
-          category={editingCategory}
-          canMutate={pageData.canMutate}
-          cancelHref="/admin/categorias"
-          defaultParentId={params.padre}
-        />
-      ) : null}
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+        <div className="grid gap-6">
+          {shouldShowForm ? (
+            <CategoryForm
+              key={editingCategory?.id ?? `new-${params.padre ?? "parent"}`}
+              categories={pageData.categories}
+              category={editingCategory}
+              canMutate={pageData.canMutate}
+              cancelHref="/admin/categorias"
+              defaultParentId={params.padre}
+            />
+          ) : null}
 
-      <section className="grid gap-4">
-        {parentCategories.length > 0 ? (
-          parentCategories.map((parent) => (
-            <div key={parent.id} className="grid gap-3">
-              <CategoryRow
-                category={parent}
-                canMutate={pageData.canMutate}
-                hasChildren={Boolean(childrenByParent[parent.id]?.length)}
+          <section className="grid gap-4">
+            {parentCategories.length > 0 ? (
+              parentCategories.map((parent) => (
+                <div key={parent.id} className="grid gap-3">
+                  <CategoryRow
+                    category={parent}
+                    canMutate={pageData.canMutate}
+                    hasChildren={Boolean(childrenByParent[parent.id]?.length)}
+                  />
+                  {(childrenByParent[parent.id] ?? []).map((child) => (
+                    <CategoryRow
+                      key={child.id}
+                      category={child}
+                      canMutate={pageData.canMutate}
+                      hasChildren={Boolean(childrenByParent[child.id]?.length)}
+                      level={1}
+                    />
+                  ))}
+                </div>
+              ))
+            ) : (
+              <EmptyState
+                title="No hay categorias"
+                description="Crea una categoria padre para empezar a organizar el catalogo."
+                actionHref="/admin/categorias?nuevo=1"
+                actionLabel="Crear categoria"
               />
-              {(childrenByParent[parent.id] ?? []).map((child) => (
-                <CategoryRow
-                  key={child.id}
-                  category={child}
-                  canMutate={pageData.canMutate}
-                  hasChildren={Boolean(childrenByParent[child.id]?.length)}
-                  level={1}
-                />
-              ))}
-            </div>
-          ))
-        ) : (
-          <EmptyState
-            title="No hay categorias"
-            description="Crea una categoria padre para empezar a organizar el catalogo."
-            actionHref="/admin/categorias?nuevo=1"
-            actionLabel="Crear categoria"
-          />
-        )}
+            )}
 
-        {orphanChildren.length > 0 ? (
-          <div className="grid gap-3 rounded-[1.75rem] border border-[color-mix(in_srgb,var(--color-warning)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_8%,var(--color-card)_92%)] p-4">
-            <p className="text-sm font-semibold text-[var(--color-card-foreground)]">
-              Familias con grupo principal no encontrado
-            </p>
-            {orphanChildren.map((child) => (
-              <CategoryRow
-                key={child.id}
-                category={child}
-                canMutate={pageData.canMutate}
-                hasChildren={Boolean(childrenByParent[child.id]?.length)}
-                level={1}
-              />
-            ))}
-          </div>
-        ) : null}
-      </section>
+            {orphanChildren.length > 0 ? (
+              <div className="grid gap-3 rounded-[1.75rem] border border-[color-mix(in_srgb,var(--color-warning)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-warning)_8%,var(--color-card)_92%)] p-4">
+                <p className="text-sm font-semibold text-[var(--color-card-foreground)]">
+                  Familias con grupo principal no encontrado
+                </p>
+                {orphanChildren.map((child) => (
+                  <CategoryRow
+                    key={child.id}
+                    category={child}
+                    canMutate={pageData.canMutate}
+                    hasChildren={Boolean(childrenByParent[child.id]?.length)}
+                    level={1}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

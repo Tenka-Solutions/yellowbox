@@ -298,8 +298,8 @@ export default async function AdminProductsPage({
   ].filter((label): label is string => Boolean(label));
 
   return (
-    <div className="grid gap-6">
-      <section className="panel-card overflow-hidden rounded-[2rem] p-6 sm:p-8">
+    <div className="flex min-h-screen flex-col gap-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
+      <section className="panel-card shrink-0 overflow-hidden rounded-[2rem] p-6 sm:p-8">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="section-kicker">Catalogo</p>
@@ -350,7 +350,7 @@ export default async function AdminProductsPage({
 
       {message ? (
         <div
-          className={`rounded-[1.5rem] border p-4 text-sm font-medium ${
+          className={`shrink-0 rounded-[1.5rem] border p-4 text-sm font-medium ${
             message.tone === "success"
               ? "border-[color-mix(in_srgb,var(--color-success)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-success)_16%,var(--color-card)_84%)] text-[var(--color-card-foreground)]"
               : "border-[color-mix(in_srgb,var(--color-danger)_40%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-danger)_16%,var(--color-card)_84%)] text-[var(--color-card-foreground)]"
@@ -361,135 +361,144 @@ export default async function AdminProductsPage({
       ) : null}
 
       {pageData.warning ? (
-        <div className="rounded-[1.5rem] border border-[color-mix(in_srgb,var(--color-warning)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-warning)_18%,var(--color-card)_82%)] p-4 text-sm leading-7 text-[var(--color-card-foreground)]">
+        <div className="shrink-0 rounded-[1.5rem] border border-[color-mix(in_srgb,var(--color-warning)_42%,var(--color-border))] bg-[color-mix(in_srgb,var(--color-warning)_18%,var(--color-card)_82%)] p-4 text-sm leading-7 text-[var(--color-card-foreground)]">
           {pageData.warning}
         </div>
       ) : null}
 
-      {shouldShowForm ? (
-        <ProductForm
-          key={editingProduct?.id ?? "new-product"}
-          categories={allProductsData.categories}
-          product={editingProduct}
-          canMutate={pageData.canMutate}
-          cancelHref="/admin/productos"
-        />
-      ) : null}
-
-      <section className="panel-card rounded-[2rem] p-5 sm:p-6">
-        {activeFilterLabels.length > 0 ? (
-          <div className="mb-4 flex flex-wrap gap-2">
-            {activeFilterLabels.map((label) => (
-              <span
-                key={label}
-                className="inline-flex min-h-9 items-center rounded-full border border-[color-mix(in_srgb,var(--color-primary)_36%,var(--color-border)_64%)] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-card)_92%)] px-4 text-xs font-semibold text-[var(--color-ink)]"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        <form className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px_220px_190px_190px_auto_auto] xl:items-end">
-          <label className="grid gap-2 text-sm font-semibold">
-            Buscar por nombre, SKU, marca comercial o EAN
-            <input
-              name="q"
-              defaultValue={params.q ?? ""}
-              className="form-input"
-              placeholder="Ej: Caprimo, REG-10100100, 304393"
-            />
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold">
-            Grupo principal
-            <select
-              name="categoriaPadre"
-              defaultValue={selectedParentCategory ?? ""}
-              className="form-input"
-            >
-              <option value="">Todas</option>
-              {parentCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                  {!category.isActive ? " (inactiva)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold">
-            Familia comercial
-            <select
-              name="subcategoria"
-              defaultValue={selectedSubcategory ?? ""}
-              className="form-input"
-            >
-              <option value="">Todas</option>
-              {subcategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {getCategoryOptionLabel(category, pageData.categories)}
-                  {!category.isActive ? " (inactiva)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold">
-            Disponibilidad
-            <select
-              name="estadoDisponibilidad"
-              defaultValue={params.estadoDisponibilidad ?? params.estadoProducto ?? ""}
-              className="form-input"
-            >
-              <option value="">Todos</option>
-              <option value="available">Disponible</option>
-              <option value="check_availability">Consultar</option>
-              <option value="sold_out">Agotado</option>
-            </select>
-          </label>
-
-          <label className="grid gap-2 text-sm font-semibold">
-            Publicacion
-            <select
-              name="estadoPublicacion"
-              defaultValue={params.estadoPublicacion ?? ""}
-              className="form-input"
-            >
-              <option value="">Todas</option>
-              <option value="draft">Borrador</option>
-              <option value="published">Publicado</option>
-              <option value="archived">Archivado</option>
-            </select>
-          </label>
-
-          <button type="submit" className="button-primary px-6 py-3 text-sm">
-            Filtrar
-          </button>
-
-          <Link href="/admin/productos" className="button-secondary px-6 py-3 text-sm">
-            Limpiar
-          </Link>
-        </form>
-      </section>
-
-      <section className="grid gap-3">
-        {pageData.products.length > 0 ? (
-          pageData.products.map((product) => (
-            <ProductAdminCard
-              key={product.id}
-              product={product}
+      <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-1">
+        <div className="grid gap-6">
+          {shouldShowForm ? (
+            <ProductForm
+              key={editingProduct?.id ?? "new-product"}
+              categories={allProductsData.categories}
+              product={editingProduct}
               canMutate={pageData.canMutate}
+              cancelHref="/admin/productos"
             />
-          ))
-        ) : (
-          <EmptyState
-            title="No encontramos productos"
-            description="Ajusta la busqueda o crea un producto nuevo para comenzar a administrarlo desde Supabase."
-            actionHref="/admin/productos?nuevo=1"
-            actionLabel="Crear producto"
-          />
-        )}
-      </section>
+          ) : null}
+
+          <section className="panel-card rounded-[2rem] p-5 sm:p-6">
+            {activeFilterLabels.length > 0 ? (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {activeFilterLabels.map((label) => (
+                  <span
+                    key={label}
+                    className="inline-flex min-h-9 items-center rounded-full border border-[color-mix(in_srgb,var(--color-primary)_36%,var(--color-border)_64%)] bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-card)_92%)] px-4 text-xs font-semibold text-[var(--color-ink)]"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <form className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px_220px_190px_190px_auto_auto] xl:items-end">
+              <label className="grid gap-2 text-sm font-semibold">
+                Buscar por nombre, SKU, marca comercial o EAN
+                <input
+                  name="q"
+                  defaultValue={params.q ?? ""}
+                  className="form-input"
+                  placeholder="Ej: Caprimo, REG-10100100, 304393"
+                />
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold">
+                Grupo principal
+                <select
+                  name="categoriaPadre"
+                  defaultValue={selectedParentCategory ?? ""}
+                  className="form-input"
+                >
+                  <option value="">Todas</option>
+                  {parentCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                      {!category.isActive ? " (inactiva)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold">
+                Familia comercial
+                <select
+                  name="subcategoria"
+                  defaultValue={selectedSubcategory ?? ""}
+                  className="form-input"
+                >
+                  <option value="">Todas</option>
+                  {subcategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {getCategoryOptionLabel(category, pageData.categories)}
+                      {!category.isActive ? " (inactiva)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold">
+                Disponibilidad
+                <select
+                  name="estadoDisponibilidad"
+                  defaultValue={
+                    params.estadoDisponibilidad ?? params.estadoProducto ?? ""
+                  }
+                  className="form-input"
+                >
+                  <option value="">Todos</option>
+                  <option value="available">Disponible</option>
+                  <option value="check_availability">Consultar</option>
+                  <option value="sold_out">Agotado</option>
+                </select>
+              </label>
+
+              <label className="grid gap-2 text-sm font-semibold">
+                Publicacion
+                <select
+                  name="estadoPublicacion"
+                  defaultValue={params.estadoPublicacion ?? ""}
+                  className="form-input"
+                >
+                  <option value="">Todas</option>
+                  <option value="draft">Borrador</option>
+                  <option value="published">Publicado</option>
+                  <option value="archived">Archivado</option>
+                </select>
+              </label>
+
+              <button type="submit" className="button-primary px-6 py-3 text-sm">
+                Filtrar
+              </button>
+
+              <Link
+                href="/admin/productos"
+                className="button-secondary px-6 py-3 text-sm"
+              >
+                Limpiar
+              </Link>
+            </form>
+          </section>
+
+          <section className="grid gap-3">
+            {pageData.products.length > 0 ? (
+              pageData.products.map((product) => (
+                <ProductAdminCard
+                  key={product.id}
+                  product={product}
+                  canMutate={pageData.canMutate}
+                />
+              ))
+            ) : (
+              <EmptyState
+                title="No encontramos productos"
+                description="Ajusta la busqueda o crea un producto nuevo para comenzar a administrarlo desde Supabase."
+                actionHref="/admin/productos?nuevo=1"
+                actionLabel="Crear producto"
+              />
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }
