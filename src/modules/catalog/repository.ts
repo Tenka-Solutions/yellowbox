@@ -10,14 +10,17 @@ import {
   productMatchesBrandFilter,
 } from "@/modules/catalog/filters";
 
-const publicCategorySlugAliases: Record<string, string> = {
-  "cafe-grano": "cafe-en-grano",
-  "cafe-instantaneo": "cafe-insumos",
-  "accesorios-vasos": "vasos-accesorios",
+const publicCategorySlugAliases: Record<string, string[]> = {
+  "cafe-insumos": ["cafe"],
+  "cafe-grano": ["cafe", "cafe-en-grano"],
+  "cafe-instantaneo": ["cafe", "cafe-insumos"],
+  "accesorios-vasos": ["vasos-accesorios"],
 };
 
 const publicParentCategoryLegacySlugs: Record<string, string[]> = {
+  cafe: ["cafe-insumos", "cafe-grano", "cafe-instantaneo"],
   "cafe-insumos": ["cafe-grano", "cafe-instantaneo"],
+  insumos: ["accesorios-vasos", "vasos-accesorios"],
   "vasos-accesorios": ["accesorios-vasos"],
 };
 
@@ -37,9 +40,11 @@ function hasCategorySlug(categories: CatalogCategory[], slug: string) {
 }
 
 function resolveCategorySlug(slug: string, categories: CatalogCategory[]) {
-  const canonicalSlug = publicCategorySlugAliases[slug];
+  const canonicalSlug = publicCategorySlugAliases[slug]?.find((candidate) =>
+    hasCategorySlug(categories, candidate)
+  );
 
-  if (canonicalSlug && hasCategorySlug(categories, canonicalSlug)) {
+  if (canonicalSlug) {
     return canonicalSlug;
   }
 
@@ -54,8 +59,7 @@ function shouldShowCategoryInPublicNavigation(
     return false;
   }
 
-  const canonicalSlug = publicCategorySlugAliases[category.slug];
-  return !(canonicalSlug && hasCategorySlug(categories, canonicalSlug));
+  return resolveCategorySlug(category.slug, categories) === category.slug;
 }
 
 function getEquivalentCategorySlugs(

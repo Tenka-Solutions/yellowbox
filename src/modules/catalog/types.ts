@@ -66,5 +66,11 @@ export interface CatalogFilters {
 
 export type CategoryNavItem =
   | { type: "all"; label: string; source: "system" }
-  | { type: "category"; label: string; slug: string; source: "supabase" }
+  | {
+      type: "category";
+      label: string;
+      slug: string;
+      source: "supabase";
+      isFeatured?: boolean;
+    }
   | { type: "brand"; label: string; brand: string; source: "products" };

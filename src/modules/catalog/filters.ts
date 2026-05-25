@@ -36,6 +36,7 @@ export const coffeeSupplyFilters = [
 ] as const satisfies readonly CoffeeSupplyFilter[];
 
 const coffeeSupplyRootSlugs = new Set([
+  "cafe",
   "cafe-insumos",
   "cafe-instantaneo",
   "cafe-grano",
@@ -58,6 +59,12 @@ export const highlightedCatalogBrands = [
   aliases: readonly string[];
 }[];
 
+export const highlightedCatalogCategorySlugs = [
+  "mokador",
+  "laqtia",
+  "schoppe",
+] as const;
+
 const familySlugs: Record<
   Extract<
     CoffeeSupplyFilterValue,
@@ -65,8 +72,8 @@ const familySlugs: Record<
   >,
   string[]
 > = {
-  cafes: ["cafe-en-grano", "cafe-grano", "cafe-instantaneo"],
-  leches: ["leches-toppings"],
+  cafes: ["cafe", "cafe-en-grano", "cafe-grano", "cafe-instantaneo"],
+  leches: ["leches", "toppings", "leches-toppings"],
   capuchinos: ["capuchinos", "mokachinos"],
   chocolates: ["chocolates"],
   chai: ["chai-te-instantaneo"],
@@ -147,7 +154,9 @@ export function isCoffeeSupplyCategory(
     return true;
   }
 
-  const root = findCategoryBySlug(categories, "cafe-insumos");
+  const root =
+    findCategoryBySlug(categories, "cafe") ??
+    findCategoryBySlug(categories, "cafe-insumos");
   if (!root) {
     return false;
   }

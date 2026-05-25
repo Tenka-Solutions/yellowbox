@@ -2,108 +2,171 @@
 
 ## Resumen
 
-La revision local confirma que el admin usa Supabase como fuente real para productos y categorias. El problema principal no es que el admin no liste productos, sino que la tienda publica aplica reglas correctas de visibilidad y hoy oculta productos sin precio publico.
-
-Estado observado el 2026-05-25:
-
-- Categorias en Supabase: 18.
-- Productos en Supabase: 51.
-- Productos visibles en tienda publica: 29.
-- Productos ocultos por reglas publicas: 22.
-- Causa de los 22 ocultos: `gross_price_clp` / `price_clp_tax_inc` en `0`.
-- No se detectaron categorias inactivas u ocultas afectando esos 22 productos.
-- No se detectaron productos ocultos por `draft` en la muestra revisada.
-- Marcas destacadas presentes con escritura correcta: Mokador, Laqtia, Schoppe.
-- No se detectaron productos con marca `Schioo`.
-
-## Diagnostico
-
-El frontend de tienda esta respetando una regla prudente: solo muestra productos `published`, con precio bruto mayor a `0`, y con categoria activa/visible. Por eso los productos con marca Mokador, Laqtia y Schoppe no aparecen todavia como accesos de marca destacados: existen en Supabase, pero todos tienen precio publico `0`.
-
-La taxonomia actual mezcla categorias raiz antiguas con la estructura nueva:
-
-- Raices antiguas con productos publicos: `cafe-grano`, `cafe-instantaneo`, `accesorios-vasos`.
-- Raiz comercial nueva: `cafe-insumos`, con familias hijas.
-- Raiz comercial nueva: `vasos-accesorios`, pero sus subcategorias no tienen productos directos.
-- Raiz comercial correcta: `maquinas`.
-
-Esto explica que la navegacion se sienta menos unificada. El codigo contiene alias para mantener compatibilidad de rutas, pero la fuente de verdad deberia quedar mas limpia en Supabase.
-
-## Productos no visibles y motivo
-
-Todos los siguientes productos estan `published`, con categoria activa/visible, pero no aparecen en tienda porque su precio bruto publico es `0`:
-
-- Leche Liofilizada Regilait Topping-2
-- Leche Liofilizada Regilait Skimmed
-- Chocolate Van Houten VH12
-- Caprimo Cappuccino Speculos
-- Caprimo Cappuccino Noisette
-- Caprimo Cappuccino Caramelo
-- Caprimo Capuccino Vainilla LS
-- Mokador 100% Arabica Bio
-- Mokador Oro Blend
-- Mokador Brio 100
-- Mokador Extra Cream
-- Schoppe Caramel 302
-- Schoppe Vainilla 301
-- Schoppe Noisette 303
-- Schoppe Choco 107
-- Schoppe Instant Tea 505
-- Laqtia Mocacino
-- Laqtia Capuccino
-- Laqtia French Vainilla
-- Laqtia Leche Topping
-- Laqtia Chocolate 22% Cacao Q15
-- Laqtia Natur Basic
-
-## Admin
-
-El admin esta administrando correctamente productos y categorias desde Supabase:
-
-- `src/modules/catalog/admin.ts` lee `categories` y `products` con cliente admin.
-- `src/app/(admin)/admin/productos/page.tsx` lista todos los productos leidos y permite filtrar/editar.
-- `src/components/admin/ProductForm.tsx` permite editar categoria, precio, estado de publicacion, marca y stock.
-- `src/app/(admin)/admin/categorias/page.tsx` lista categorias raiz e hijas.
-- `src/components/admin/CategoryForm.tsx` permite crear/editar categorias y parent.
-
-La visibilidad publica se explica tambien desde el admin mediante `src/modules/catalog/admin-visibility.ts`: un producto publicado sin precio publico queda como "Sin precio publico".
-
-## Taxonomia recomendada
-
-La estructura logica recomendada para Supabase es:
+La decision de negocio actual es normalizar la taxonomia real de Supabase en tres raices:
 
 - `cafe`
 - `maquinas`
 - `insumos`
 
-Mapeo comercial esperado:
+La tienda debe seguir usando Supabase como fuente de verdad. El admin sigue siendo el lugar de gestion de productos y categorias. No se deben borrar categorias ni productos durante esta normalizacion.
 
-- Navbar "Maquinas" apunta a `maquinas`.
-- Navbar "Cafe e insumos" representa `cafe` + `insumos`.
-- Navbar "Vasos y accesorios" debe vivir dentro de `insumos`, como grupo o familias hijas.
+Estado observado el 2026-05-25, en consulta solo lectura:
 
-Sugerencia sin borrar datos:
+- Categorias en Supabase: 18.
+- Productos en Supabase: 51.
+- Productos publicables por reglas actuales: 48.
+- Productos aun no publicables: 3, porque `gross_price_clp` sigue en `0`.
+- Muchos productos tienen `price_clp_tax_inc = 0`, pero ya tienen `gross_price_clp` temporal mayor a `0`; la tienda publica hoy usa `gross_price_clp ?? price_clp_tax_inc`.
+- Los precios cargados son temporales/ficticios y deben reemplazarse por precios reales antes de operar comercialmente.
 
-- Crear o activar `cat-cafe` con slug `cafe`.
-- Mantener `cat-maquinas` con slug `maquinas`.
-- Crear o activar `cat-insumos` con slug `insumos`.
-- Mover familias de cafe bajo `cat-cafe` cuando sean realmente cafe.
-- Mover familias de insumos bajo `cat-insumos`.
-- Mover `vasos-accesorios` bajo `cat-insumos`.
-- Mover tambien la categoria legacy `accesorios-vasos` bajo `cat-insumos` mientras se revisa la clasificacion fina de esos productos.
-- Revisar manualmente productos que hoy estan en categorias legacy antes de moverlos.
+## Diagnostico actual
+
+Supabase todavia mezcla una taxonomia legacy con la estructura comercial nueva.
+
+Raices actuales:
+
+- `cafe-grano`
+- `cafe-instantaneo`
+- `accesorios-vasos`
+- `cafe-insumos`
+- `vasos-accesorios`
+- `maquinas`
+
+Raices objetivo:
+
+- `cafe`
+- `maquinas`
+- `insumos`
+
+Categorias objetivo bajo `cafe`:
+
+- `mokador`
+- `laqtia`
+- `schoppe`
+- `capuchinos`
+- `chocolates`
+- `leches`
+- `chai-te-instantaneo`
+- `toppings`
+- otros relacionados, como cafe en grano, cafe instantaneo o mokachinos si negocio los mantiene.
+
+Categorias objetivo bajo `maquinas`:
+
+- maquinas y sus familias hijas.
+
+Categorias objetivo bajo `insumos`:
+
+- `vasos`
+- `accesorios`
+- `tapas`
+- `revolvedores`
+- otros insumos fisicos.
+
+## Mokador, Laqtia y Schoppe
+
+Hoy existen como `brand` en productos, pero no existen como categorias:
+
+- `Mokador`: 4 productos totales, 3 publicables.
+- `Laqtia`: 6 productos totales, 4 publicables.
+- `Schoppe`: 5 productos totales, 5 publicables.
+- `Schioo`: no existe en datos revisados.
+
+Nueva decision:
+
+- `mokador` debe ser categoria hija de `cafe`.
+- `laqtia` debe ser categoria hija de `cafe`.
+- `schoppe` debe ser categoria hija de `cafe`.
+- Tambien se mantiene el campo `brand` del producto, porque ya existe y no requiere cambio de schema.
+- La barra de `/tienda` debe destacarlas visualmente solo cuando existan como categorias publicas y tengan productos publicables.
+
+## Productos aun no publicables
+
+Quedan productos publicados con precio bruto publico en `0`:
+
+- Mokador Extra Cream
+- Laqtia French Vainilla
+- Laqtia Chocolate 22% Cacao Q15
+
+No inventar precios desde SQL. Deben revisarse manualmente en admin o mediante una carga de precios validada por negocio.
+
+## Categorias legacy
+
+Categorias legacy detectadas:
+
+- `cafe-grano`
+- `cafe-instantaneo`
+- `accesorios-vasos`
+- `cafe-insumos`
+- `vasos-accesorios`, si se decide reemplazarla por `insumos` + `vasos` / `accesorios`.
+
+Regla de manejo:
+
+- No borrar.
+- No desactivar categorias con productos directos hasta que los productos esten reclasificados.
+- Mantener alias frontend para rutas existentes mientras se completa la normalizacion.
+- Mover `parent_id` cuando el mapeo es claro.
+- Cambiar `category_id` de productos solo cuando el mapeo es claro.
+- Dejar TODO/manual para productos ambiguos, especialmente vasos, tapas, sachets, mangas y accesorios fisicos.
+
+## Mapeo propuesto
+
+Mapeo claro de categorias:
+
+- `maquinas` queda como raiz.
+- `maquinas-cafe` y `maquinas-vending` quedan bajo `maquinas`.
+- `capuchinos`, `chocolates`, `chai-te-instantaneo`, `mokachinos` quedan bajo `cafe`.
+- `mokador`, `laqtia`, `schoppe` se crean como hijas de `cafe`.
+- `vasos`, `accesorios`, `tapas`, `revolvedores` quedan bajo `insumos`.
+- `vasos-polipapel` y `vasos-eco-ripple` pueden quedar bajo `vasos`.
+- `accesorios-vasos` se mantiene como legacy bajo `insumos` mientras se separan sus productos.
+- `cafe-insumos` se mantiene temporalmente como legacy para no romper rutas antiguas.
+
+Mapeo claro de productos:
+
+- Productos con `brand = Mokador` pueden moverse a categoria `mokador`.
+- Productos con `brand = Laqtia` pueden moverse a categoria `laqtia`.
+- Productos con `brand = Schoppe` pueden moverse a categoria `schoppe`.
+
+Mapeo manual:
+
+- Productos en `accesorios-vasos` deben revisarse uno por uno para moverlos a `vasos`, `tapas`, `revolvedores` o `accesorios`.
+- Productos en `leches-toppings` deben revisarse si negocio quiere separar `leches` y `toppings`.
+- Productos de cafe legacy en `cafe-grano` y `cafe-instantaneo` pueden mantenerse bajo esas categorias movidas a `cafe`, o consolidarse despues.
+
+## Frontend
+
+La barra de `/tienda` debe usar categorias reales desde Supabase.
+
+Comportamiento propuesto:
+
+- `Todos` al inicio.
+- Categorias destacadas por allowlist temporal de slugs: `mokador`, `laqtia`, `schoppe`.
+- La allowlist solo ordena y da tratamiento visual; no crea datos.
+- Una categoria destacada aparece solo si existe en Supabase como publica y tiene productos publicables.
+- Categorias base despues: `cafe`, `maquinas`, `insumos`, y familias comerciales relevantes.
+- Mantener soporte de `brand` como compatibilidad de URL, pero no usarlo como fuente visual principal.
+- `/tienda` debe mostrar una sola barra principal; busqueda y orden quedan como controles secundarios.
+
+## Admin
+
+El admin sigue siendo valido como fuente de gestion:
+
+- Lista categorias y productos desde Supabase.
+- Permite editar categoria, precio, estado de publicacion, marca y stock.
+- Permite crear categorias nuevas sin migraciones.
+- Permite mover productos a categorias nuevas usando el formulario.
 
 ## Antes de ejecutar SQL
 
 No ejecutar la propuesta directamente en produccion sin revisar:
 
-- Respaldar tablas `categories` y `products`.
-- Confirmar con negocio si `capuchinos`, `mokachinos`, `chocolates`, `chai-te-instantaneo` y `leches-toppings` son familias de `insumos` o de `cafe`.
-- Confirmar si los productos directos en `accesorios-vasos` deben quedarse en el grupo `vasos-accesorios` o distribuirse en `vasos-polipapel`, `vasos-eco-ripple`, `tapas` y `revolvedores`.
-- Cargar precios reales para productos con precio `0`; no inventar precios.
+- Hacer respaldo de `categories` y `products`.
 - Probar primero en staging.
-- En el archivo SQL la transaccion termina con `rollback` por seguridad. Reemplazar por `commit` solo despues de validar el resultado.
+- Confirmar que los precios temporales fueron reemplazados por precios reales.
+- Confirmar si la categoria principal de un producto branded debe ser la marca o la familia.
+- Revisar manualmente productos fisicos antes de separarlos en `vasos`, `tapas`, `revolvedores` o `accesorios`.
+- En el SQL la transaccion termina con `rollback`; cambiar a `commit` solo despues de validar.
 
-## Archivo SQL
+## SQL pendiente
 
 Ver `docs/propuesta-normalizacion-categorias-productos.sql`.

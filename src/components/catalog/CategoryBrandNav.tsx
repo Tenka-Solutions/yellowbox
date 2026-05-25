@@ -95,6 +95,8 @@ export function CategoryBrandNav({
         <div className="flex min-w-max items-center gap-2 p-0.5 sm:gap-3">
           {items.map((item) => {
             const isActive = isItemActive(item, currentParams);
+            const isFeaturedCategory =
+              item.type === "category" && item.isFeatured;
             const key =
               item.type === "category"
                 ? `category-${item.slug}`
@@ -111,6 +113,8 @@ export function CategoryBrandNav({
                 className={`group inline-flex min-h-12 min-w-[8.75rem] shrink-0 touch-manipulation items-center justify-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-extrabold transition duration-200 sm:min-h-14 sm:min-w-[10rem] sm:px-5 ${
                   isActive
                     ? "border-[color-mix(in_srgb,var(--color-primary)_58%,var(--color-border)_42%)] bg-[linear-gradient(135deg,var(--color-primary)_0%,var(--color-primary-hover)_100%)] text-[var(--color-primary-foreground)] shadow-[0_16px_28px_-22px_var(--color-primary)]"
+                    : isFeaturedCategory
+                      ? "border-[color-mix(in_srgb,var(--color-primary)_44%,var(--color-border)_56%)] bg-[color-mix(in_srgb,var(--color-primary)_12%,var(--color-card)_88%)] text-[var(--color-primary)] shadow-[0_15px_30px_-24px_var(--color-primary)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-primary)_70%,var(--color-border)_30%)] hover:bg-[color-mix(in_srgb,var(--color-primary)_18%,var(--color-card)_82%)]"
                     : "border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-card)_78%,var(--color-surface-strong)_22%)] text-[var(--color-ink)] shadow-[0_12px_26px_-28px_rgba(35,45,47,0.42)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-primary)_58%,var(--color-border)_42%)] hover:bg-[color-mix(in_srgb,var(--color-primary)_8%,var(--color-card)_92%)] hover:text-[var(--color-primary)]"
                 }`}
               >
@@ -119,6 +123,8 @@ export function CategoryBrandNav({
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full border text-[0.66rem] font-black ${
                     isActive
                       ? "border-[color-mix(in_srgb,var(--color-primary-foreground)_46%,transparent)] bg-[color-mix(in_srgb,var(--color-primary-foreground)_18%,transparent)] text-[var(--color-primary-foreground)]"
+                      : isFeaturedCategory
+                        ? "border-[color-mix(in_srgb,var(--color-primary)_36%,var(--color-border)_64%)] bg-[color-mix(in_srgb,var(--color-primary)_18%,var(--color-card)_82%)] text-[var(--color-primary)]"
                       : "border-[color-mix(in_srgb,var(--color-secondary)_32%,var(--color-border)_68%)] bg-[color-mix(in_srgb,var(--color-surface-strong)_72%,var(--color-card)_28%)] text-[var(--color-secondary)] group-hover:border-[color-mix(in_srgb,var(--color-primary)_38%,var(--color-border)_62%)] group-hover:text-[var(--color-primary)]"
                   }`}
                 >
