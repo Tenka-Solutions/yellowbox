@@ -1,6 +1,5 @@
 import { CatalogFilters } from "@/components/catalog/CatalogFilters";
 import { CategoryBrandNav } from "@/components/catalog/CategoryBrandNav";
-import { CoffeeSupplyFilterBar } from "@/components/catalog/CoffeeSupplyFilterBar";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { isCoffeeSupplyCategory } from "@/modules/catalog/filters";
@@ -49,11 +48,6 @@ export default async function StorePage({
       <div className="mt-4">
         <CatalogFilters categories={categories} />
       </div>
-      {showCoffeeSupplyFilters ? (
-        <div className="mt-3">
-          <CoffeeSupplyFilterBar />
-        </div>
-      ) : null}
       <div className="mt-3">
         {products.length ? (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
