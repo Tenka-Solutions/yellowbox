@@ -18,6 +18,11 @@ export type CoffeeSupplyFilter = {
   kind: "all" | "brand" | "family";
 };
 
+type HighlightedBrandValue = Extract<
+  CoffeeSupplyFilterValue,
+  "mokador" | "schoppe" | "laqtia"
+>;
+
 export const coffeeSupplyFilters = [
   { label: "Todos", mark: "T", value: "all", kind: "all" },
   { label: "Mokador", mark: "M", value: "mokador", kind: "brand" },
@@ -36,14 +41,22 @@ const coffeeSupplyRootSlugs = new Set([
   "cafe-grano",
 ]);
 
-const brandAliases: Record<
-  Extract<CoffeeSupplyFilterValue, "mokador" | "schoppe" | "laqtia">,
-  string[]
-> = {
+const brandAliases: Record<HighlightedBrandValue, string[]> = {
   mokador: ["mokador"],
   schoppe: ["schoppe", "schope"],
   laqtia: ["laqtia", "lactia"],
 };
+
+export const highlightedCatalogBrands = [
+  { label: "Mokador", mark: "M", value: "mokador", aliases: brandAliases.mokador },
+  { label: "Laqtia", mark: "L", value: "laqtia", aliases: brandAliases.laqtia },
+  { label: "Schoppe", mark: "S", value: "schoppe", aliases: brandAliases.schoppe },
+] as const satisfies readonly {
+  label: string;
+  mark: string;
+  value: HighlightedBrandValue;
+  aliases: readonly string[];
+}[];
 
 const familySlugs: Record<
   Extract<
@@ -75,6 +88,20 @@ export function getCoffeeSupplyFilter(
   return coffeeSupplyFilters.some((filter) => filter.value === normalized)
     ? (normalized as CoffeeSupplyFilterValue)
     : "all";
+}
+
+export function getHighlightedBrandFilter(value: string | null | undefined) {
+  const normalized = normalizeCatalogFilterText(value);
+
+  return (
+    highlightedCatalogBrands.find(
+      (brand) =>
+        brand.value === normalized ||
+        brand.aliases.some(
+          (alias) => normalizeCatalogFilterText(alias) === normalized
+        )
+    )?.value ?? null
+  );
 }
 
 function findCategoryBySlug(categories: CatalogCategory[], slug: string) {
@@ -133,10 +160,26 @@ function productMatchesBrand(product: CatalogProduct, filter: CoffeeSupplyFilter
     return false;
   }
 
+  return productMatchesBrandFilter(product, filter);
+}
+
+export function productMatchesBrandFilter(
+  product: CatalogProduct,
+  value: string | null | undefined
+) {
+  const normalizedFilter = normalizeCatalogFilterText(value);
+
+  if (!normalizedFilter) {
+    return false;
+  }
+
+  const highlightedBrand = getHighlightedBrandFilter(normalizedFilter);
+  const aliases = highlightedBrand
+    ? brandAliases[highlightedBrand]
+    : [normalizedFilter];
   const brand = normalizeCatalogFilterText(product.brand);
-  return brandAliases[filter].some(
-    (alias) => normalizeCatalogFilterText(alias) === brand
-  );
+
+  return aliases.some((alias) => normalizeCatalogFilterText(alias) === brand);
 }
 
 function productMatchesFamily(
