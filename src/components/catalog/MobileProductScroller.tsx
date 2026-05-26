@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState, type MouseEvent, type TouchEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import { toast } from "sonner";
 import { formatClp } from "@/lib/format/currency";
 import { useCartStore } from "@/lib/cart-store";
@@ -11,13 +11,9 @@ import type { CatalogProduct } from "@/modules/catalog/types";
 function MobileAddButton({ product }: { product: CatalogProduct }) {
   const [isAdding, setIsAdding] = useState(false);
   const lastInteractionRef = useRef(0);
-  const isUnavailable = ["sold_out", "draft", "hidden"].includes(
-    product.availabilityStatus
-  );
+  const isUnavailable = product.availabilityStatus === "sold_out";
 
-  function handleAdd(
-    event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>
-  ) {
+  function handleAdd(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     event.stopPropagation();
 
@@ -51,7 +47,6 @@ function MobileAddButton({ product }: { product: CatalogProduct }) {
       type="button"
       disabled={isUnavailable || isAdding}
       onClick={handleAdd}
-      onTouchEnd={handleAdd}
       className="mt-3 inline-flex min-h-10 w-full select-none items-center justify-center rounded-full bg-[var(--color-primary)] px-3 text-xs font-bold text-[var(--color-primary-foreground)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50 [touch-action:manipulation]"
     >
       {isUnavailable ? "Sin stock" : isAdding ? "Agregando..." : "Agregar"}
