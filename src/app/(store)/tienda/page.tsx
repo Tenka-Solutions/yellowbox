@@ -35,9 +35,6 @@ export default async function StorePage({
 
   return (
     <div className="page-shell pt-5">
-      <div className="max-w-3xl">
-        <p className="section-kicker">Tienda</p>
-      </div>
       <MobileCategoryScroller categories={categories} />
       <div className="mt-4">
         <CatalogFilters categories={categories} hideCategorySelectOnMobile />
