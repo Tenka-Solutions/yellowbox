@@ -1,5 +1,7 @@
 import { CatalogFilters } from "@/components/catalog/CatalogFilters";
 import { CoffeeSupplyFilterBar } from "@/components/catalog/CoffeeSupplyFilterBar";
+import { MobileCategoryScroller } from "@/components/catalog/MobileCategoryScroller";
+import { MobileProductScroller } from "@/components/catalog/MobileProductScroller";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { isCoffeeSupplyCategory } from "@/modules/catalog/filters";
@@ -36,21 +38,29 @@ export default async function StorePage({
       <div className="max-w-3xl">
         <p className="section-kicker">Tienda</p>
       </div>
+      <div className="mt-4 md:hidden">
+        <MobileCategoryScroller categories={categories} />
+      </div>
       <div className="mt-4">
         <CatalogFilters categories={categories} />
       </div>
       {showCoffeeSupplyFilters ? (
-        <div className="mt-3">
+        <div className="mt-3 hidden md:block">
           <CoffeeSupplyFilterBar />
         </div>
       ) : null}
       <div className="mt-3">
         {products.length ? (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="md:hidden">
+              <MobileProductScroller products={products} />
+            </div>
+            <div className="hidden gap-6 md:grid md:grid-cols-2 xl:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </>
         ) : (
           <EmptyState
             title="No encontramos coincidencias"
