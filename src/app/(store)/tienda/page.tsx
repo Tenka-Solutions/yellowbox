@@ -38,11 +38,9 @@ export default async function StorePage({
       <div className="max-w-3xl">
         <p className="section-kicker">Tienda</p>
       </div>
-      <div className="mt-4 md:hidden">
-        <MobileCategoryScroller categories={categories} />
-      </div>
+      <MobileCategoryScroller categories={categories} />
       <div className="mt-4">
-        <CatalogFilters categories={categories} />
+        <CatalogFilters categories={categories} hideCategorySelectOnMobile />
       </div>
       {showCoffeeSupplyFilters ? (
         <div className="mt-3 hidden md:block">

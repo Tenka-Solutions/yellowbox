@@ -1,5 +1,7 @@
 "use client";
 
+import clsx from "clsx";
+import Image from "next/image";
 import { useMemo, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { normalizeCatalogFilterText } from "@/modules/catalog/filters";
@@ -46,6 +48,19 @@ const primaryCategoryTargets = [
     names: ["leches", "leches toppings", "leches / toppings"],
   },
 ] as const;
+
+const categoryImageFallbacks: Record<string, string> = {
+  mokador: "/catalog/categories/mokador.png",
+  leches: "/catalog/categories/caja-de-leche.png",
+  leche: "/catalog/categories/caja-de-leche.png",
+  "leches-toppings": "/catalog/categories/caja-de-leche.png",
+  capuchinos: "/catalog/categories/capuchino.png",
+  capuchino: "/catalog/categories/capuchino.png",
+  chai: "/catalog/categories/chai-masala.png",
+  "chai-te-instantaneo": "/catalog/categories/chai-masala.png",
+  chocolates: "/catalog/categories/chocolate.png",
+  chocolate: "/catalog/categories/chocolate.png",
+};
 
 function findCategory(
   categories: CatalogCategory[],
@@ -99,6 +114,14 @@ function buildMobileCategories(categories: CatalogCategory[]) {
   return selected;
 }
 
+function getCategoryImage(category: CatalogCategory) {
+  const slug = normalizeCatalogFilterText(category.slug);
+  const name = normalizeCatalogFilterText(category.name);
+  const imageUrl = category.imageUrl?.trim();
+
+  return imageUrl || categoryImageFallbacks[slug] || categoryImageFallbacks[name];
+}
+
 export function MobileCategoryScroller({
   categories,
 }: {
@@ -132,25 +155,33 @@ export function MobileCategoryScroller({
   }
 
   return (
-    <nav aria-label="Categorias de tienda" className="-mx-4">
+    <nav
+      aria-label="Categorias de tienda"
+      className="sticky top-16 z-30 -mx-4 mt-4 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-background)_88%,transparent)] py-2 backdrop-blur-xl md:hidden"
+    >
       <div className="overflow-x-auto scroll-smooth px-4 pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-max gap-2 whitespace-nowrap">
+        <div className="flex min-w-max items-center gap-2.5 whitespace-nowrap">
           <button
             type="button"
             disabled={isPending}
             aria-pressed={!activeCategory}
             onClick={() => navigateToCategory(null)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-bold transition disabled:cursor-wait disabled:opacity-60 ${
+            className={clsx(
+              "inline-flex min-h-[50px] min-w-[150px] shrink-0 items-center justify-center rounded-full border px-4 py-2.5 text-sm font-extrabold whitespace-nowrap transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:cursor-wait disabled:opacity-60",
               !activeCategory
-                ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-[0_14px_28px_-22px_var(--color-primary)]"
-                : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-ink)]"
-            }`}
+                ? "border-[color-mix(in_srgb,var(--color-primary)_70%,var(--color-border)_30%)] bg-[linear-gradient(135deg,var(--color-primary),color-mix(in_srgb,var(--color-primary)_72%,white_28%))] text-[var(--color-primary-foreground)] shadow-[0_14px_24px_-18px_var(--color-primary)]"
+                : "border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-card)_74%,var(--color-surface-strong)_26%)] text-[var(--color-ink)] shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_12px_22px_-20px_rgba(35,45,47,0.34)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-primary)_40%,var(--color-border)_60%)] hover:bg-[color-mix(in_srgb,var(--color-card)_92%,var(--color-primary)_8%)]"
+            )}
           >
-            Todo
+            Todos
           </button>
 
           {mobileCategories.map((category) => {
             const isActive = activeCategory === category.slug;
+            const imageSrc = getCategoryImage(category);
+            const isMokador =
+              normalizeCatalogFilterText(category.slug) === "mokador" ||
+              normalizeCatalogFilterText(category.name) === "mokador";
 
             return (
               <button
@@ -159,13 +190,28 @@ export function MobileCategoryScroller({
                 disabled={isPending}
                 aria-pressed={isActive}
                 onClick={() => navigateToCategory(category.slug)}
-                className={`min-h-11 rounded-full border px-4 text-sm font-bold transition disabled:cursor-wait disabled:opacity-60 ${
+                className={clsx(
+                  "inline-flex min-h-[50px] min-w-[150px] shrink-0 items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-extrabold whitespace-nowrap transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:cursor-wait disabled:opacity-60",
                   isActive
-                    ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-[var(--color-primary-foreground)] shadow-[0_14px_28px_-22px_var(--color-primary)]"
-                    : "border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-ink)] hover:border-[color-mix(in_srgb,var(--color-primary)_58%,var(--color-border)_42%)] hover:text-[var(--color-primary)]"
-                }`}
+                    ? "border-[color-mix(in_srgb,var(--color-primary)_70%,var(--color-border)_30%)] bg-[linear-gradient(135deg,var(--color-primary),color-mix(in_srgb,var(--color-primary)_72%,white_28%))] text-[var(--color-primary-foreground)] shadow-[0_14px_24px_-18px_var(--color-primary)]"
+                    : "border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-card)_74%,var(--color-surface-strong)_26%)] text-[var(--color-ink)] shadow-[inset_0_1px_0_rgba(255,255,255,0.42),0_12px_22px_-20px_rgba(35,45,47,0.34)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--color-primary)_40%,var(--color-border)_60%)] hover:bg-[color-mix(in_srgb,var(--color-card)_92%,var(--color-primary)_8%)]"
+                )}
               >
-                {category.name}
+                {imageSrc ? (
+                  <Image
+                    src={imageSrc}
+                    alt=""
+                    width={isMokador ? 96 : 24}
+                    height={isMokador ? 34 : 24}
+                    className={clsx(
+                      "shrink-0 object-contain",
+                      isMokador ? "h-auto w-20" : "h-6 w-6"
+                    )}
+                  />
+                ) : null}
+                <span className={clsx(isMokador && imageSrc && "sr-only")}>
+                  {category.name}
+                </span>
               </button>
             );
           })}

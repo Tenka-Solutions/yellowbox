@@ -18,8 +18,10 @@ function getCategoryLabel(
 
 export function CatalogFilters({
   categories,
+  hideCategorySelectOnMobile = false,
 }: {
   categories: CatalogCategory[];
+  hideCategorySelectOnMobile?: boolean;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -56,7 +58,9 @@ export function CatalogFilters({
       />
       <select
         defaultValue={searchParams.get("categoria") ?? ""}
-        className="form-input"
+        className={
+          hideCategorySelectOnMobile ? "form-input hidden md:block" : "form-input"
+        }
         onChange={(event) => updateParam("categoria", event.target.value)}
       >
         <option value="">Todas las categorías</option>
