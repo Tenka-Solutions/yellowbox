@@ -12,7 +12,12 @@ import {
 } from "@/modules/checkout/schema";
 
 type Errors = Record<string, string>;
+type CheckoutPaymentMethod = "mercadopago" | "flow";
+
 const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
+const isMercadoPagoCheckoutEnabled = Boolean(
+  process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
+);
 
 const initialForm = {
   documentType: "boleta" as "boleta" | "factura",
@@ -40,6 +45,9 @@ export function CheckoutForm({
   const items = useCartStore((store) => store.items);
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Errors>({});
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>(
+    isMercadoPagoCheckoutEnabled ? "mercadopago" : "flow"
+  );
   const [isPending, startTransition] = useTransition();
 
   const customerPayload = useMemo(
@@ -127,15 +135,20 @@ export function CheckoutForm({
     }
 
     startTransition(async () => {
-      if (!apiBaseUrl) {
+      if (paymentMethod === "flow" && !apiBaseUrl) {
         toast.error("Checkout no configurado. Intenta nuevamente mas tarde.");
         return;
       }
 
-      const response = await fetch(`${apiBaseUrl}/orders/create`, {
+      const endpoint =
+        paymentMethod === "mercadopago"
+          ? "/api/payments/mercadopago/checkout"
+          : `${apiBaseUrl}/orders/create`;
+
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...validationResult.data, method: "flow" }),
+        body: JSON.stringify({ ...validationResult.data, method: paymentMethod }),
       });
 
       const data = await response.json();
@@ -323,6 +336,36 @@ export function CheckoutForm({
               onChange={(event) => setField("deliveryNotes", event.target.value)}
             />
           </div>
+        </div>
+      </div>
+
+      <div className="mt-8 border-t border-[var(--color-border)] pt-8">
+        <p className="mb-2 text-sm font-medium">Medio de pago</p>
+        <div className="inline-flex rounded-full border border-[var(--color-border)] p-1 text-sm">
+          {isMercadoPagoCheckoutEnabled ? (
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("mercadopago")}
+              className={`rounded-full px-4 py-1.5 transition ${
+                paymentMethod === "mercadopago"
+                  ? "bg-[#F2A359] text-white"
+                  : "text-[var(--color-muted-foreground)]"
+              }`}
+            >
+              Mercado Pago
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("flow")}
+            className={`rounded-full px-4 py-1.5 transition ${
+              paymentMethod === "flow"
+                ? "bg-[#F2A359] text-white"
+                : "text-[var(--color-muted-foreground)]"
+            }`}
+          >
+            Flow
+          </button>
         </div>
       </div>
 

@@ -35,6 +35,12 @@ export const env = {
     process.env.FLOW_CONFIRMATION_URL ??
     process.env.FLOW_CONFIRM_URL ??
     "http://localhost:3000/api/payments/flow/webhook",
+  mercadoPagoAccessToken: process.env.MERCADOPAGO_ACCESS_TOKEN ?? "",
+  mercadoPagoPublicKey: process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY ?? "",
+  mercadoPagoIntegratorId: process.env.MERCADOPAGO_INTEGRATOR_ID ?? "",
+  mercadoPagoCertificationExternalReferenceEmail:
+    process.env.MERCADOPAGO_CERTIFICATION_EXTERNAL_REFERENCE_EMAIL ?? "",
+  mercadoPagoWebhookSecret: process.env.MERCADOPAGO_WEBHOOK_SECRET ?? "",
   adminPanelUrl:
     process.env.ADMIN_PANEL_URL ?? "http://localhost:3000/admin/pedidos",
   quoteToEmail: process.env.QUOTE_TO_EMAIL ?? "soporte@smkvending.cl",
@@ -87,4 +93,8 @@ export function isGetnetConfigured() {
 
 export function isFlowConfigured() {
   return Boolean(env.flowApiKey && env.flowSecretKey && env.flowApiUrl);
+}
+
+export function isMercadoPagoConfigured() {
+  return Boolean(env.mercadoPagoAccessToken);
 }

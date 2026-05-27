@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { PaymentReturnDetails } from "@/components/payments/PaymentReturnDetails";
 import { getPublicOrderPaymentStatus } from "@/modules/payments/public-status";
 
 function buildResultHref(path: string, orderNumber: string) {
@@ -13,7 +14,14 @@ export default async function RejectedPage({
   searchParams: Promise<{
     order?: string;
     status?: string;
+    collection_status?: string;
     reason?: string;
+    reference?: string;
+    payment_id?: string;
+    collection_id?: string;
+    preference_id?: string;
+    external_reference?: string;
+    merchant_order_id?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -33,7 +41,7 @@ export default async function RejectedPage({
     ? "El pago fue cancelado"
     : "No fue posible completar el pago";
   const description = payment
-    ? "Flow informo que el pago fue rechazado o cancelado. Tu carrito se mantuvo intacto para que puedas reintentar o revisar la informacion antes de volver al checkout."
+    ? "El proveedor informo que el pago fue rechazado o cancelado. Tu carrito se mantuvo intacto para que puedas reintentar o revisar la informacion antes de volver al checkout."
     : "No pudimos verificar una confirmacion aprobada del pago. Tu carrito se mantuvo intacto para que puedas reintentar o contactar al equipo comercial.";
 
   return (
@@ -51,6 +59,15 @@ export default async function RejectedPage({
         <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
           {description}
         </p>
+        <PaymentReturnDetails
+          order={payment?.orderNumber ?? params.order}
+          reference={params.reference}
+          paymentId={params.payment_id ?? params.collection_id}
+          preferenceId={params.preference_id}
+          merchantOrderId={params.merchant_order_id}
+          externalReference={params.external_reference}
+          status={params.status ?? params.collection_status}
+        />
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link href="/checkout" className="button-primary px-6 py-3">
             Reintentar pago

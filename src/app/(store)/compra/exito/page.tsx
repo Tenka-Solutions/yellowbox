@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ClearCartOnMount } from "@/components/cart/ClearCartOnMount";
+import { PaymentReturnDetails } from "@/components/payments/PaymentReturnDetails";
 import { getPublicOrderPaymentStatus } from "@/modules/payments/public-status";
 
 function buildPendingHref(orderNumber?: string) {
@@ -19,6 +20,12 @@ export default async function SuccessPage({
     reference?: string;
     mode?: string;
     status?: string;
+    collection_status?: string;
+    payment_id?: string;
+    collection_id?: string;
+    preference_id?: string;
+    external_reference?: string;
+    merchant_order_id?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -33,9 +40,9 @@ export default async function SuccessPage({
       ? "El pago no fue aprobado"
       : "Estamos verificando tu pago";
   const description = isPaid
-    ? "Recibimos la confirmacion del pago desde Flow. Te contactaremos por correo con el seguimiento de la compra y la coordinacion del despacho."
+    ? "Recibimos la confirmacion del pago desde el proveedor. Te contactaremos por correo con el seguimiento de la compra y la coordinacion del despacho."
     : isRejected
-      ? "Flow informo que el pago fue rechazado o cancelado. Tu carrito no se limpia automaticamente para que puedas reintentar."
+      ? "El proveedor informo que el pago fue rechazado o cancelado. Tu carrito no se limpia automaticamente para que puedas reintentar."
       : "Aun no tenemos una confirmacion final desde el servidor. Si ya pagaste, espera unos minutos y vuelve a revisar el estado del pedido.";
 
   return (
@@ -53,6 +60,15 @@ export default async function SuccessPage({
         <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
           {description}
         </p>
+        <PaymentReturnDetails
+          order={payment?.orderNumber ?? params.order}
+          reference={params.reference}
+          paymentId={params.payment_id ?? params.collection_id}
+          preferenceId={params.preference_id}
+          merchantOrderId={params.merchant_order_id}
+          externalReference={params.external_reference}
+          status={params.status ?? params.collection_status}
+        />
         {!isPaid ? (
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
