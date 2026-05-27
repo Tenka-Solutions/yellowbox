@@ -50,6 +50,7 @@ export interface CatalogProduct {
 export interface CatalogFilters {
   query?: string;
   category?: CatalogCategorySlug;
+  brand?: string;
   coffeeSupplyFilter?: string;
   featuredOnly?: boolean;
   sort?:
@@ -62,3 +63,22 @@ export interface CatalogFilters {
     | "za";
   limit?: number;
 }
+
+export type CategoryNavItem =
+  | { type: "all"; label: string; source: "system" }
+  | {
+      type: "category";
+      label: string;
+      slug: string;
+      source: "supabase";
+      imageUrl?: string | null;
+      isFeatured?: boolean;
+    }
+  | {
+      type: "brand";
+      label: string;
+      brand: string;
+      source: "products";
+      imageUrl?: string | null;
+      isFeatured?: boolean;
+    };

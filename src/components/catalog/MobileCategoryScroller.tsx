@@ -10,12 +10,7 @@ import type { CatalogCategory } from "@/modules/catalog/types";
 const featuredCategoryTargets = [
   { slugs: ["laqtia"], names: ["laqtia"] },
   { slugs: ["mokador"], names: ["mokador"] },
-  // TODO: confirmar escritura final Schoppee/Schoee y reemplazar por
-  // is_featured/sort_order cuando exista en Supabase.
-  {
-    slugs: ["schoppe", "schoppee", "schoee"],
-    names: ["schoppe", "schoppee", "schoee"],
-  },
+  { slugs: ["schoppe"], names: ["schoppe"] },
 ] as const;
 
 const primaryCategoryTargets = [

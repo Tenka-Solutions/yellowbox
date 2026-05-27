@@ -61,7 +61,9 @@ export function CatalogFilters({
         className={
           hideCategorySelectOnMobile ? "form-input hidden md:block" : "form-input"
         }
-        onChange={(event) => updateParam("categoria", event.target.value)}
+        onChange={(event) =>
+          updateParam("categoria", event.target.value, ["brand", "filtro"])
+        }
       >
         <option value="">Todas las categorías</option>
         {categories.map((category) => (
