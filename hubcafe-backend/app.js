@@ -5,6 +5,7 @@ const cors = require("cors");
 const healthRoutes = require("./routes/health.routes");
 const ordersRoutes = require("./routes/orders.routes");
 const paymentsRoutes = require("./routes/payments.routes");
+const productsRoutes = require("./routes/products.routes");
 const quotesRoutes = require("./routes/quotes.routes");
 const { warnMissingEnv } = require("./lib/env-check");
 
@@ -37,6 +38,7 @@ function mountRoutes(prefix) {
   app.use(prefix, healthRoutes);
   app.use(prefix, ordersRoutes);
   app.use(prefix, paymentsRoutes);
+  app.use(prefix, productsRoutes);
   app.use(prefix, quotesRoutes);
 }
 

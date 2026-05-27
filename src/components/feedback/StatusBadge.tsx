@@ -38,6 +38,10 @@ const statusMap = {
     label: "Fallido",
     className: statusToneClassNames.danger,
   },
+  refunded: {
+    label: "Reembolsado",
+    className: statusToneClassNames.muted,
+  },
   expired: {
     label: "Expirado",
     className: statusToneClassNames.muted,

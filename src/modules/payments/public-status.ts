@@ -1,4 +1,10 @@
-export type PublicPaymentStatus = "pending" | "paid" | "rejected" | "cancelled";
+export type PublicPaymentStatus =
+  | "pending"
+  | "paid"
+  | "rejected"
+  | "cancelled"
+  | "failed"
+  | "refunded";
 
 export interface PublicOrderPaymentStatus {
   orderNumber: string;
@@ -13,6 +19,7 @@ interface BackendPaymentStatusResponse {
     order_number?: string;
     order_status?: string;
     payment_status?: PublicPaymentStatus;
+    payment_provider?: string | null;
   };
 }
 

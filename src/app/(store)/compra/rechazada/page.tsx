@@ -36,7 +36,9 @@ export default async function RejectedPage({
   }
 
   const wasCancelled =
-    params.status === "cancelled" || payment?.paymentStatus === "cancelled";
+    params.status === "cancelled" ||
+    payment?.paymentStatus === "cancelled" ||
+    payment?.paymentStatus === "refunded";
   const title = wasCancelled
     ? "El pago fue cancelado"
     : "No fue posible completar el pago";

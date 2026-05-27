@@ -28,6 +28,86 @@ function getFrontendSiteUrl() {
   );
 }
 
+function getNextOrderStatusFromPayment(paymentStatus, currentOrderStatus) {
+  if (paymentStatus === "paid" && ["pending", "rejected", "cancelled"].includes(currentOrderStatus)) {
+    return "paid";
+  }
+
+  if (paymentStatus === "failed" || paymentStatus === "rejected") {
+    return "rejected";
+  }
+
+  if (paymentStatus === "cancelled" || paymentStatus === "refunded") {
+    return "cancelled";
+  }
+
+  return null;
+}
+
+async function processPaidOrderOnce(order) {
+  try {
+    await discountStockFromSupabase(order);
+  } catch (error) {
+    await ordersRepository.addOrderEvent(order.id, "stock_discount_failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  try {
+    await sendPaidOrderEmail(order);
+  } catch (error) {
+    await ordersRepository.addOrderEvent(order.id, "paid_order_email_failed", {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+async function applyPaymentStatusToOrder({
+  order,
+  paymentStatus,
+  paymentAttemptId,
+  gateway,
+  eventType,
+  eventPayload = {},
+}) {
+  const shouldPreservePaidOrder =
+    order.payment_status === "paid" &&
+    ["pending", "rejected", "cancelled"].includes(paymentStatus);
+  let updatedOrder = order;
+
+  if (!shouldPreservePaidOrder) {
+    const nextOrderStatus = getNextOrderStatusFromPayment(
+      paymentStatus,
+      order.order_status
+    );
+
+    updatedOrder = await ordersRepository.updateOrderPaymentStatus(
+      order.id,
+      paymentStatus,
+      nextOrderStatus
+    );
+  }
+
+  await ordersRepository.addOrderEvent(order.id, eventType, {
+    paymentAttemptId,
+    paymentStatus,
+    gateway,
+    skippedStatusUpdate: shouldPreservePaidOrder,
+    ...eventPayload,
+  });
+
+  const detailedOrder = await ordersRepository.getOrderDetail(updatedOrder.id);
+
+  if (paymentStatus === "paid") {
+    await processPaidOrderOnce(detailedOrder);
+  }
+
+  return {
+    order: detailedOrder,
+    skippedStatusUpdate: shouldPreservePaidOrder,
+  };
+}
+
 async function processFlowToken(token) {
   const flowStatus = await getFlowPaymentStatus(token);
   const commerceOrder = flowStatus.commerceOrder || flowStatus.commerce_order || "";
@@ -74,50 +154,22 @@ async function processFlowToken(token) {
     confirmed_at: paymentStatus === "pending" ? attempt.confirmed_at : new Date().toISOString(),
   });
 
-  let nextOrderStatus = null;
-  if (paymentStatus === "paid" && ["pending", "rejected", "cancelled"].includes(order.order_status)) {
-    nextOrderStatus = "paid";
-  }
-  if (paymentStatus === "rejected") nextOrderStatus = "rejected";
-  if (paymentStatus === "cancelled") nextOrderStatus = "cancelled";
-
-  const updatedOrder = await ordersRepository.updateOrderPaymentStatus(
-    order.id,
+  const result = await applyPaymentStatusToOrder({
+    order,
     paymentStatus,
-    nextOrderStatus
-  );
-
-  await ordersRepository.addOrderEvent(order.id, "flow_payment_status_updated", {
     paymentAttemptId: attempt.id,
-    paymentStatus,
-    flowStatus: flowStatus.status,
-    commerceOrder,
+    gateway: "flow",
+    eventType: "flow_payment_status_updated",
+    eventPayload: {
+      flowStatus: flowStatus.status,
+      commerceOrder,
+    },
   });
-
-  const detailedOrder = await ordersRepository.getOrderDetail(updatedOrder.id);
-
-  if (paymentStatus === "paid") {
-    try {
-      await discountStockFromSupabase(detailedOrder);
-    } catch (error) {
-      await ordersRepository.addOrderEvent(order.id, "stock_discount_failed", {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-
-    try {
-      await sendPaidOrderEmail(detailedOrder);
-    } catch (error) {
-      await ordersRepository.addOrderEvent(order.id, "paid_order_email_failed", {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
 
   return {
     ok: true,
     found: true,
-    order: detailedOrder,
+    order: result.order,
     paymentStatus,
     flowStatus,
   };
@@ -131,7 +183,10 @@ function buildFlowReturnUrl(result) {
   if (hasVerifiedOrder && result.paymentStatus === "paid") {
     path = "/compra/exito";
     returnStatus = "success";
-  } else if (hasVerifiedOrder && result.paymentStatus === "rejected") {
+  } else if (
+    hasVerifiedOrder &&
+    ["failed", "rejected", "refunded"].includes(result.paymentStatus)
+  ) {
     path = "/compra/rechazada";
     returnStatus = "failed";
   } else if (hasVerifiedOrder && result.paymentStatus === "cancelled") {
@@ -153,7 +208,10 @@ function buildFlowReturnUrl(result) {
 }
 
 module.exports = {
+  applyPaymentStatusToOrder,
   buildFlowReturnUrl,
   getFlowToken,
+  getFrontendSiteUrl,
   processFlowToken,
+  processPaidOrderOnce,
 };

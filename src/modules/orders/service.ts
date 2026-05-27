@@ -8,7 +8,13 @@ import {
   CheckoutShippingInput,
 } from "@/modules/checkout/schema";
 
-export type PaymentStatus = "pending" | "paid" | "rejected" | "cancelled";
+export type PaymentStatus =
+  | "pending"
+  | "paid"
+  | "rejected"
+  | "cancelled"
+  | "failed"
+  | "refunded";
 export type OrderStatus =
   | "pending"
   | "paid"

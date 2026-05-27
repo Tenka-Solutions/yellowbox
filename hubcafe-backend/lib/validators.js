@@ -77,11 +77,35 @@ function normalizeShipping(payload) {
   };
 }
 
+function normalizePaymentMethod(payload) {
+  const rawMethod = String(
+    (payload && (payload.method || payload.paymentMethod || payload.payment_method || payload.gateway)) ||
+      ""
+  )
+    .trim()
+    .toLowerCase();
+
+  if (!rawMethod) {
+    return "flow";
+  }
+
+  if (rawMethod === "mercado_pago" || rawMethod === "mp") {
+    return "mercadopago";
+  }
+
+  if (rawMethod === "flow" || rawMethod === "mercadopago") {
+    return rawMethod;
+  }
+
+  throw new Error("Medio de pago no soportado.");
+}
+
 function validateOrderPayload(payload) {
   return {
     customer: normalizeCustomer(payload || {}),
     cart: normalizeCart(payload || {}),
     shipping: normalizeShipping(payload || {}),
+    paymentMethod: normalizePaymentMethod(payload || {}),
   };
 }
 
@@ -98,6 +122,7 @@ function validateQuotePayload(payload) {
 
 module.exports = {
   normalizeCustomer,
+  normalizePaymentMethod,
   normalizeCart,
   normalizeShipping,
   validateOrderPayload,

@@ -33,7 +33,9 @@ export default async function PendingPaymentPage({
 
   if (
     payment?.paymentStatus === "rejected" ||
-    payment?.paymentStatus === "cancelled"
+    payment?.paymentStatus === "cancelled" ||
+    payment?.paymentStatus === "failed" ||
+    payment?.paymentStatus === "refunded"
   ) {
     redirect(buildResultHref("/compra/rechazada", payment.orderNumber));
   }

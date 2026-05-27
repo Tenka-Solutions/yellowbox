@@ -102,6 +102,8 @@ const paymentStatusLabels: Record<PaymentStatus, string> = {
   paid: "Pagado",
   rejected: "Rechazado",
   cancelled: "Anulado",
+  failed: "Fallido",
+  refunded: "Reembolsado",
 };
 
 function toOrderStatus(value?: string): AdminOrderStatus | undefined {
@@ -117,7 +119,14 @@ function toArchivedFilter(value?: string): AdminArchivedFilter {
 }
 
 function toPaymentStatus(value?: string): PaymentStatus | undefined {
-  return ["pending", "paid", "rejected", "cancelled"].includes(value ?? "")
+  return [
+    "pending",
+    "paid",
+    "rejected",
+    "cancelled",
+    "failed",
+    "refunded",
+  ].includes(value ?? "")
     ? (value as PaymentStatus)
     : undefined;
 }

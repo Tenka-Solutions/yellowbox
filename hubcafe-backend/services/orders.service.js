@@ -39,6 +39,7 @@ function assertProductCanSell(product, quantity) {
 
 async function createOrder(payload) {
   const input = validateOrderPayload(payload);
+  const paymentMethod = input.paymentMethod;
   const productMatches = await productsRepository.findProductsForCart(input.cart);
   const items = productMatches.map(({ cartItem, product }) => {
     assertProductCanSell(product, cartItem.quantity);
@@ -62,13 +63,31 @@ async function createOrder(payload) {
     items,
     shipping: input.shipping,
     totals,
+    paymentProvider: paymentMethod,
   });
   let paymentUrl = null;
   let token = null;
   let warning;
 
+  if (paymentMethod === "mercadopago") {
+    await ordersRepository.addOrderEvent(order.id, "mercadopago_checkout_selected", {
+      source: "hubcafe-backend",
+    });
+
+    order = await ordersRepository.getOrderDetail(order.id);
+    return {
+      order,
+      paymentUrl,
+      token,
+      provider: "mercadopago",
+      nextStep: "create_mercadopago_preference",
+    };
+  }
+
   const attempt = await paymentsRepository.createPaymentAttempt({
     order,
+    provider: "flow",
+    reference: order.order_number,
     requestPayload: {
       amount: order.total_tax_inc,
       customerEmail: order.customer_email,

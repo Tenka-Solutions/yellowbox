@@ -3,6 +3,8 @@ const PAYMENT_STATUS_TO_SUPABASE = {
   PAGADO: "paid",
   RECHAZADO: "rejected",
   ANULADO: "cancelled",
+  FALLIDO: "failed",
+  REEMBOLSADO: "refunded",
 };
 
 const ORDER_STATUS_TO_SUPABASE = {

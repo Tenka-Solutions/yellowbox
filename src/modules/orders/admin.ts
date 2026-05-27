@@ -43,6 +43,7 @@ const CONFIRMED_PAYMENT_STATUSES = [
   "completed",
   "succeeded",
   "success",
+  "refunded",
 ] as const;
 
 const STOCK_EVENT_TYPES = [
@@ -379,7 +380,14 @@ function toOrderStatus(value: unknown): OrderStatus {
 }
 
 function toPaymentStatus(value: unknown): PaymentStatus {
-  return ["pending", "paid", "rejected", "cancelled"].includes(value as string)
+  return [
+    "pending",
+    "paid",
+    "rejected",
+    "cancelled",
+    "failed",
+    "refunded",
+  ].includes(value as string)
     ? (value as PaymentStatus)
     : "pending";
 }

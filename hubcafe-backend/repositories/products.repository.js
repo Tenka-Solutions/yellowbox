@@ -50,6 +50,30 @@ async function updateProductStock(productId, nextStock) {
   return data;
 }
 
+async function listProducts(filters = {}) {
+  const supabase = requireSupabaseClient();
+  const { data, error } = await supabase
+    .from("products")
+    .select(
+      "id, sku, name, slug, gross_price_clp, price_clp_tax_inc, stock_quantity, availability_status, publication_status, updated_at"
+    )
+    .order("name", { ascending: true })
+    .limit(500);
+
+  if (error) throw error;
+
+  const query = String(filters.q || "").trim().toLowerCase();
+  if (!query) return data || [];
+
+  return (data || []).filter((product) =>
+    [product.id, product.sku, product.name, product.slug]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(query)
+  );
+}
+
 async function getProductById(productId) {
   const supabase = requireSupabaseClient();
   const { data, error } = await supabase
@@ -65,5 +89,6 @@ async function getProductById(productId) {
 module.exports = {
   findProductsForCart,
   getProductById,
+  listProducts,
   updateProductStock,
 };

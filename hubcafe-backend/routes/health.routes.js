@@ -1,6 +1,7 @@
 const express = require("express");
 const { isSupabaseConfigured } = require("../lib/supabase-client");
 const { isFlowConfigured } = require("../lib/flow-client");
+const { isMercadoPagoConfigured } = require("../services/mercadopago.service");
 const { isSmtpConfigured } = require("../lib/mailer");
 
 const router = express.Router();
@@ -12,6 +13,7 @@ router.get("/health", (_req, res) => {
     supabaseConfigured: isSupabaseConfigured(),
     smtpConfigured: isSmtpConfigured(),
     flowConfigured: isFlowConfigured(),
+    mercadoPagoConfigured: isMercadoPagoConfigured(),
   });
 });
 

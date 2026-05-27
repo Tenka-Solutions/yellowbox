@@ -33,7 +33,9 @@ export default async function SuccessPage({
   const isPaid = payment?.paymentStatus === "paid";
   const isRejected =
     payment?.paymentStatus === "rejected" ||
-    payment?.paymentStatus === "cancelled";
+    payment?.paymentStatus === "cancelled" ||
+    payment?.paymentStatus === "failed" ||
+    payment?.paymentStatus === "refunded";
   const title = isPaid
     ? "Pago aprobado"
     : isRejected

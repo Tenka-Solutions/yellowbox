@@ -8,6 +8,17 @@ const REQUIRED_GROUPS = [
     keys: ["FLOW_API_KEY", "FLOW_SECRET_KEY", "FLOW_CONFIRMATION_URL", "FLOW_RETURN_URL"],
   },
   {
+    name: "Mercado Pago",
+    keys: [
+      "MERCADOPAGO_ACCESS_TOKEN",
+      "MERCADOPAGO_INTEGRATOR_ID",
+      "MERCADOPAGO_SUCCESS_URL",
+      "MERCADOPAGO_FAILURE_URL",
+      "MERCADOPAGO_PENDING_URL",
+      "MERCADOPAGO_WEBHOOK_URL",
+    ],
+  },
+  {
     name: "Frontend",
     keys: ["FRONTEND_SITE_URL"],
   },

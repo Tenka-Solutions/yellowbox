@@ -15,9 +15,6 @@ type Errors = Record<string, string>;
 type CheckoutPaymentMethod = "mercadopago" | "flow";
 
 const apiBaseUrl = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/$/, "");
-const isMercadoPagoCheckoutEnabled = Boolean(
-  process.env.NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
-);
 
 const initialForm = {
   documentType: "boleta" as "boleta" | "factura",
@@ -45,9 +42,8 @@ export function CheckoutForm({
   const items = useCartStore((store) => store.items);
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState<Errors>({});
-  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethod>(
-    isMercadoPagoCheckoutEnabled ? "mercadopago" : "flow"
-  );
+  const [paymentMethod, setPaymentMethod] =
+    useState<CheckoutPaymentMethod>("flow");
   const [isPending, startTransition] = useTransition();
 
   const customerPayload = useMemo(
@@ -100,6 +96,48 @@ export function CheckoutForm({
     });
   }
 
+  async function readCheckoutResponse(
+    response: Response
+  ): Promise<Record<string, unknown>> {
+    try {
+      const payload = await response.json();
+      return payload && typeof payload === "object"
+        ? (payload as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function nestedOrder(payload: Record<string, unknown>) {
+    return payload.order && typeof payload.order === "object"
+      ? (payload.order as Record<string, unknown>)
+      : {};
+  }
+
+  function stringValue(value: unknown) {
+    return typeof value === "string" && value.trim() ? value : null;
+  }
+
+  function getOrderNumber(payload: Record<string, unknown>) {
+    const order = nestedOrder(payload);
+    return (
+      stringValue(payload.order_number) ??
+      stringValue(payload.orderNumber) ??
+      stringValue(order.order_number) ??
+      stringValue(order.orderNumber)
+    );
+  }
+
+  function getOrderId(payload: Record<string, unknown>) {
+    const order = nestedOrder(payload);
+    return (
+      stringValue(payload.order_id) ??
+      stringValue(payload.orderId) ??
+      stringValue(order.id)
+    );
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -135,31 +173,79 @@ export function CheckoutForm({
     }
 
     startTransition(async () => {
-      if (paymentMethod === "flow" && !apiBaseUrl) {
+      if (!apiBaseUrl) {
         toast.error("Checkout no configurado. Intenta nuevamente mas tarde.");
         return;
       }
 
-      const endpoint =
-        paymentMethod === "mercadopago"
-          ? "/api/payments/mercadopago/checkout"
-          : `${apiBaseUrl}/orders/create`;
-
-      const response = await fetch(endpoint, {
+      const orderResponse = await fetch(`${apiBaseUrl}/orders/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...validationResult.data, method: paymentMethod }),
+        body: JSON.stringify({
+          ...validationResult.data,
+          method: paymentMethod,
+          gateway: paymentMethod,
+        }),
       });
+      const orderData = await readCheckoutResponse(orderResponse);
 
-      const data = await response.json();
-      const paymentUrl = data.paymentUrl ?? data.redirectUrl;
-
-      if (!response.ok || !paymentUrl) {
-        toast.error(data.error ?? "No fue posible iniciar el pago.");
+      if (!orderResponse.ok) {
+        toast.error(
+          stringValue(orderData.error) ?? "No fue posible crear el pedido."
+        );
         return;
       }
 
-      window.location.href = paymentUrl;
+      if (paymentMethod === "flow") {
+        const paymentUrl =
+          stringValue(orderData.paymentUrl) ?? stringValue(orderData.redirectUrl);
+
+        if (!paymentUrl) {
+          toast.error(
+            stringValue(orderData.warning) ??
+              "No fue posible iniciar el pago con Flow."
+          );
+          return;
+        }
+
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      const orderNumber = getOrderNumber(orderData);
+      const orderId = getOrderId(orderData);
+
+      if (!orderNumber && !orderId) {
+        toast.error("El backend no retorno el identificador del pedido.");
+        return;
+      }
+
+      const preferenceResponse = await fetch(
+        `${apiBaseUrl}/payments/mercadopago/preference`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_number: orderNumber,
+            order_id: orderId,
+          }),
+        }
+      );
+      const preferenceData = await readCheckoutResponse(preferenceResponse);
+      const initPoint =
+        stringValue(preferenceData.init_point) ??
+        stringValue(preferenceData.paymentUrl) ??
+        stringValue(preferenceData.redirectUrl);
+
+      if (!preferenceResponse.ok || !initPoint) {
+        toast.error(
+          stringValue(preferenceData.error) ??
+            "No fue posible iniciar Mercado Pago."
+        );
+        return;
+      }
+
+      window.location.href = initPoint;
     });
   }
 
@@ -342,19 +428,6 @@ export function CheckoutForm({
       <div className="mt-8 border-t border-[var(--color-border)] pt-8">
         <p className="mb-2 text-sm font-medium">Medio de pago</p>
         <div className="inline-flex rounded-full border border-[var(--color-border)] p-1 text-sm">
-          {isMercadoPagoCheckoutEnabled ? (
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("mercadopago")}
-              className={`rounded-full px-4 py-1.5 transition ${
-                paymentMethod === "mercadopago"
-                  ? "bg-[#F2A359] text-white"
-                  : "text-[var(--color-muted-foreground)]"
-              }`}
-            >
-              Mercado Pago
-            </button>
-          ) : null}
           <button
             type="button"
             onClick={() => setPaymentMethod("flow")}
@@ -366,6 +439,17 @@ export function CheckoutForm({
           >
             Flow
           </button>
+          <button
+            type="button"
+            onClick={() => setPaymentMethod("mercadopago")}
+            className={`rounded-full px-4 py-1.5 transition ${
+              paymentMethod === "mercadopago"
+                ? "bg-[#F2A359] text-white"
+                : "text-[var(--color-muted-foreground)]"
+            }`}
+          >
+            Mercado Pago
+          </button>
         </div>
       </div>
 
@@ -374,7 +458,11 @@ export function CheckoutForm({
         disabled={items.length === 0 || isPending}
         className="button-primary mt-8 w-full px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {isPending ? "Redirigiendo al pago..." : "Pagar"}
+        {isPending
+          ? "Redirigiendo al pago..."
+          : paymentMethod === "flow"
+            ? "Pagar con Flow"
+            : "Pagar con Mercado Pago"}
       </button>
     </form>
   );

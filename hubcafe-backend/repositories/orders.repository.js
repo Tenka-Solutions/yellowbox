@@ -7,7 +7,7 @@ function buildOrderNumber() {
   return `SMK-${stamp}-${fragment}`;
 }
 
-async function createOrder({ customer, items, shipping, totals }) {
+async function createOrder({ customer, items, shipping, totals, paymentProvider = "flow" }) {
   const supabase = requireSupabaseClient();
   const orderNumber = buildOrderNumber();
   const { data: order, error } = await supabase
@@ -28,7 +28,7 @@ async function createOrder({ customer, items, shipping, totals }) {
       total_tax_inc: totals.totalTaxInc,
       order_status: "pending",
       payment_status: "pending",
-      payment_provider: "flow",
+      payment_provider: paymentProvider,
     })
     .select("*")
     .single();
@@ -70,6 +70,7 @@ async function createOrder({ customer, items, shipping, totals }) {
   await addOrderEvent(order.id, "order_created", {
     source: "hubcafe-backend",
     itemCount: items.length,
+    paymentProvider,
   });
 
   return getOrderByIdOrNumber(order.id);
